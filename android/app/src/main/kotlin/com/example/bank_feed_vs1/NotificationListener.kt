@@ -14,7 +14,7 @@ class NotificationListener : NotificationListenerService() {
         val timestamp = sbn.postTime // Thời gian thông báo được tạo
 
         // Log dữ liệu thông báo
-        Log.d("NotificationListener", "Notification from: $packageName, content: $notificationContent, timestamp: $timestamp")
+        Log.d("NotificationListener", "Notification from: $packageName, content: $notificationContent, timestamp: $timestamp, test $sbn")
 
         // Chuẩn bị dữ liệu cho Worker
         val notificationData = Data.Builder()

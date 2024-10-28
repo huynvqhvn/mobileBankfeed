@@ -15,33 +15,60 @@ class SmsWorker(context: Context, params: WorkerParameters) : Worker(context, pa
         val sender = inputData.getString("sender")
         val message = inputData.getString("message")
         val timestamp = inputData.getLong("timestamp", 0)
+        val call: Call<List<RuleModel?>?>? = connectApi.getRule()
+        call!!.enqueue(object : Callback<List<RuleModel?>?> {
+            override fun onResponse(
+                call: Call<List<RuleModel?>?>,
+                response: Response<List<RuleModel?>?>
+            ) {
+                if (response.isSuccessful && response.body() != null) {
+                    val smsRules: List<RuleModel?>? = response.body()
+                    if (smsRules != null) {
+                        for (rule in smsRules) {
+                            if (rule != null) {
+                                Log.d("SmsRule", "Key Search: " + rule.keySearch)
+                                if(rule.keySearch == sender){
+                                     // Thực hiện công việc (ví dụ gửi dữ liệu này lên server)
+                                    sendSmsToServer(sender, message, timestamp);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Log.e("Error", "Response is not successful or body is null")
+                }
+            }
 
-        // Log dữ liệu nhận được
-        Log.d("SmsWorker", "Sender: $sender, Message: $message, Timestamp: $timestamp")
-
-        // Thực hiện công việc (ví dụ gửi dữ liệu này lên server)
-        sendSmsToServer(sender, message, timestamp)
-
+            override fun onFailure(call: Call<List<RuleModel?>?>, t: Throwable) {
+                Log.e("Error", t.message!!)
+            }
+        })
         // Giả sử gửi thành công
         return Result.success()
     }
 
-    private fun sendSmsToServer(sender: String?, message: String?, timestamp: Long) {
+    private fun sendSmsToServer(sender: String?, message: String?, timestamp: Long){
         // Hàm thực hiện gửi dữ liệu SMS lên server
-        Log.d("SmsWorker", "Sending SMS from $sender with message: $message at $timestamp")
-        var sms = NotificationModel("processSms running ${sender}", "${message}",timestamp);
-        connectApi.sendNotification(sms).enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                if (response.isSuccessful) {
-                    println("Log sent successfully")
-                } else {
-                    println("Failed to send log: ${response.code()}")
-                }
-            }
+        Log.d("SmsWorker", "Sending SMS from $sender with message: $message at $timestamp");
 
-            override fun onFailure(call: Call<Void>, t: Throwable) {
-                println("Error sending log: ${t.message}")
-            }
-        })
+        val databaseHelper = DatabaseHelper(applicationContext);
+        Log.d("SmsWorker","databaseHelper ruuning");
+        val unsentMessages = databaseHelper.addMessage(sender,message);
+        val checkData = databaseHelper.getAllMessages();
+        Log.d("SmsWorker", "${checkData.size}");
+//        var sms = NotificationModel("processSms running ${sender}", "${message}",timestamp);
+//        connectApi.sendNotification(sms).enqueue(object : Callback<Void> {
+//            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+//                if (response.isSuccessful) {
+//                    println("Log sent successfully")
+//                } else {
+//                    println("Failed to send log: ${response.code()}")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<Void>, t: Throwable) {
+//                println("Error sending log: ${t.message}")
+//            }
+//        })
     }
 }

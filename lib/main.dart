@@ -29,10 +29,6 @@ class _HomePageState extends State<HomePage> {
   }
   
   Future<void> _initializeData() async {
-    // bool hasPermission =
-    //     await permissionService.checkSmsPermission(); // Kiểm tra quyền
-    // await permissionService.getSms(hasPermission);
-    // await connectToBe.fetchAccount(); // Lấy tài khoản
     await NotificationAccessHelper.requestSmsPermission();
     await NotificationAccessHelper.openNotificationAccessSettings();
   }
