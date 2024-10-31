@@ -4,6 +4,7 @@ import 'package:lottie/lottie.dart';
 import 'login.dart';
 import '../Component/bottomNavigationBar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -37,9 +38,27 @@ class _SplashScreenState extends State<SplashScreen> {
           return AnimatedSplashScreen(
             duration: 5000,
             splash: Center(
-              child: Lottie.asset('assets/animations/Animation - 1728007741606.json'),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Animation
+                  Lottie.asset('assets/animations/Animation1730347910724.json'),
+
+                  // Text bên dưới animation
+                  SizedBox(height: 20), // Khoảng cách giữa animation và text
+                  Text(
+                    "Bank Feed",
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red, // Màu chữ tùy chỉnh
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
-            nextScreen: snapshot.data == true ? BottomNavigationBarExample() : LoginScreen(), // Chọn màn hình tiếp theo
+            nextScreen: BottomNavigationBarExample(),
             splashIconSize: 1000,
           );
         }
