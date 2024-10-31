@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../service/connectBe.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -32,20 +33,19 @@ class _LoginScreenState extends State<LoginScreen> {
     String usernameInput = username.text.trim();
     String passwordInput = password.text.trim();
     print("usernameInput ${usernameInput}");
-     print("passwordInput ${passwordInput}");
+    print("passwordInput ${passwordInput}");
     final token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
     print("click");
     ConnectToBe connectToBe = ConnectToBe();
     if (usernameInput == 'a' && passwordInput == '1') {
       try {
         final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('access_token', token);
-         print("click12");
-      Navigator.pushNamed(context, "/bottomnavigation");
+        await prefs.setString('access_token', token);
+        print("click12");
+        Navigator.pushNamed(context, "/bottomnavigation");
       } catch (e) {
         print(e.toString());
       }
-      
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -123,6 +123,14 @@ class _LoginScreenState extends State<LoginScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          print("Button Add được bấm");
+        },
+        child: Icon(Icons.add),
+        backgroundColor: Colors.blue,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 }

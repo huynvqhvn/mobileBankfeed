@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
 import '../screens/listRule.dart';
-import '../screens/Account.dart';
+import '../screens/historyTransition.dart';
 class BottomNavigationBarExample extends StatefulWidget {
   const BottomNavigationBarExample({super.key});
   @override
@@ -17,8 +17,7 @@ class _BottomNavigationBarExampleState
 
   static const List<Widget> _widgetOptions = <Widget>[
     ListRule(),
-    AccountSetting(),
-    AccountSetting()
+    HistoryTransition(),
   ];
 
   void _onItemTapped(int index) {
@@ -42,11 +41,7 @@ class _BottomNavigationBarExampleState
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.chair_alt),
-            label: 'Thống kê',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.supervised_user_circle),
-            label: 'Tài Khoản',
+            label: 'Danh sách thông báo',
           ),
         ],
         currentIndex: _selectedIndex,

@@ -28,6 +28,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders = [
+                appAuthRedirectScheme: "com.example.bank_feed_vs1" // Thay bằng schema thực tế của bạn
+        ]
     }
 
     buildTypes {
@@ -59,6 +62,9 @@ android {
 
         // optional - Multiprocess support
         implementation "androidx.work:work-multiprocess:$work_version"
+
+        implementation 'com.google.code.gson:gson:2.8.8'
+
     }
 }
 

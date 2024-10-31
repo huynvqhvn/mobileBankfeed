@@ -1,6 +1,7 @@
 package com.example.bank_feed_vs1
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
@@ -46,14 +47,18 @@ class SmsWorker(context: Context, params: WorkerParameters) : Worker(context, pa
         // Giả sử gửi thành công
         return Result.success()
     }
-
+    fun getDataFromFlutterSharedPreferences(context: Context, key: String): String? {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("flutter.$key", null) // Tiền tố "flutter." là cần thiết
+    }
     private fun sendSmsToServer(sender: String?, message: String?, timestamp: Long){
         // Hàm thực hiện gửi dữ liệu SMS lên server
         Log.d("SmsWorker", "Sending SMS from $sender with message: $message at $timestamp");
 
         val databaseHelper = DatabaseHelper(applicationContext);
+        val  serialNumber =  getDataFromFlutterSharedPreferences(applicationContext,"Service ID");
         Log.d("SmsWorker","databaseHelper ruuning");
-        val unsentMessages = databaseHelper.addMessage(sender,message);
+        val unsentMessages = databaseHelper.addMessage(sender,message,serialNumber);
         val checkData = databaseHelper.getAllMessages();
         Log.d("SmsWorker", "${checkData.size}");
 //        var sms = NotificationModel("processSms running ${sender}", "${message}",timestamp);
