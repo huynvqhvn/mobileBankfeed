@@ -6,7 +6,8 @@ import 'screens/splash_screen.dart';
 import 'service/connectBe.dart';
 import 'service/permistion.dart';
 import 'service/getDataSevice.dart';
-
+import 'screens/addRule.dart';
+import 'screens/managerRule.dart';
 void main() async {
   runApp(const HomePage());
 }
@@ -45,7 +46,9 @@ class _HomePageState extends State<HomePage> {
       ),
       routes: {
         '/': (context) => SplashScreen(),
-        '/addrule': (context) => ListRule(),
+        '/listrule': (context) => ListRule(),
+        '/managerrule': (context) => ManagerRule(),
+        '/addrule': (context) => Addrule(),
         '/login': (context) => LoginScreen(),
         '/bottomnavigation': (context) => BottomNavigationBarExample(),
       },

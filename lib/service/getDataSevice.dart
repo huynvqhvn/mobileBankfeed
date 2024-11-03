@@ -4,10 +4,15 @@ import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import '../model/ruleModel.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:flutter/material.dart';
+
 class NativeDataChannel {
   // Tạo MethodChannel với tên duy nhất
   static const platform = MethodChannel('com.bankfeed.app/data');
-
+  static const platformWebHook = MethodChannel('com.bankfeed.app/webhook');
+  static const platformRule = MethodChannel('com.bankfeed.app/rule');
   // Hàm gọi tới Native để lấy dữ liệu
   static Future<List<SmsModel>> getNativeData() async {
     try {
@@ -34,18 +39,87 @@ class NativeDataChannel {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(key);
   }
-  static Future<void> checkAndSaveSerial() async {
-  // Kiểm tra giá trị "Service ID" trong SharedPreferences
-  String? serviceId = await NativeDataChannel.getDataFromPreferences("Service ID");
 
-  if (serviceId == null || serviceId.isEmpty) {
-    // Khởi tạo DeviceInfoPlugin để lấy serial
-    final deviceInfoPlugin = DeviceInfoPlugin();
-    final AndroidDeviceInfo androidInfo = await deviceInfoPlugin.androidInfo;
-    String serviceID = androidInfo.id;
-    // Lưu serial vào SharedPreferences
-    await NativeDataChannel.saveDataToPreferences("Service ID", serviceID);
-    print("Serial: $serviceID");
+  static Future<void> checkAndSaveSerial() async {
+    // Kiểm tra giá trị "Service ID" trong SharedPreferences
+    String? serviceId =
+        await NativeDataChannel.getDataFromPreferences("Service ID");
+
+    if (serviceId == null || serviceId.isEmpty) {
+      // Khởi tạo DeviceInfoPlugin để lấy serial
+      final deviceInfoPlugin = DeviceInfoPlugin();
+      final AndroidDeviceInfo androidInfo = await deviceInfoPlugin.androidInfo;
+      String serviceID = androidInfo.id;
+      // Lưu serial vào SharedPreferences
+      await NativeDataChannel.saveDataToPreferences("Service ID", serviceID);
+      print("Serial: $serviceID");
+    }
   }
-}
+
+  static Future<void> sendDataWebhookToNative(String input) async {
+    try {
+      await platformWebHook.invokeMethod('userwebhook', {"input": input});
+      print("Đã gửi input lên Android Native: $input");
+    } catch (e) {
+      print("Lỗi khi gửi dữ liệu: $e");
+    }
+  }
+
+  static Future<String?> getDataWebhook() async {
+    try {
+      String result = await platformWebHook.invokeMethod('getuserwebhook');
+      print("Dữ liệu nhận: $result");
+      return result;
+    } catch (e) {
+      print("Lỗi không xác định khi nhận dữ liệu: $e");
+      return null;
+    }
+  }
+
+  static Future<bool> postRule(
+      String rule, String typeRule, BuildContext context) async {
+    try {
+      await platformRule.invokeMethod('postRule', {
+        "ruleIn": rule,
+        "typeRule": typeRule,
+      });
+
+      // Hiển thị thông báo thành công
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Thêm quy tắc thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // Quay lại và trả về `true` để biểu thị thành công
+      Navigator.pop(context, true);
+      return true;
+    } catch (e) {
+      print("Lỗi khi gửi dữ liệu: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+
+      // Trả về `false` để biểu thị thất bại
+      return false;
+    }
+  }
+
+  static Future<List<Rule>> getRule() async {
+    try {
+      String jsonData = await platformRule.invokeMethod('getRule');
+      print("jsonData2: $jsonData");
+      List<dynamic> jsonList = json.decode(jsonData);
+      print("jsonData2ab: $jsonData");
+      List<Rule> smsList = jsonList.map((item) => Rule.fromJson(item)).toList();
+      return smsList;
+    } catch (e) {
+      print("Lỗi khi gửi dữ liệuae2: $e");
+      return [];
+    }
+  }
 }

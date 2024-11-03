@@ -7,14 +7,17 @@ import androidx.work.WorkerParameters
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-
+import android.os.Build
+import androidx.annotation.RequiresApi
+import android.content.SharedPreferences
 class NotificationWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun doWork(): Result {
         // Nhận dữ liệu từ inputData
         val packageName = inputData.getString("packageName")
         val notificationContent = inputData.getString("notificationContent")
-        val timestamp = inputData.getLong("timestamp", 0)
+        val timestamp = getCurrentDateTime();
 
         // Log dữ liệu nhận được
         Log.d("NotificationWorker", "Package: $packageName, Content: $notificationContent, Timestamp: $timestamp")
@@ -26,12 +29,17 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
         // Giả sử bạn gửi thành công
         return Result.success()
     }
-
-    private fun sendNotificationToServer(packageName: String?, content: String?, timestamp: Long) {
+    fun getDataFromFlutterSharedPreferences(context: Context, key: String): String? {
+        val sharedPreferences: SharedPreferences = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+        return sharedPreferences.getString("flutter.$key", null) // Tiền tố "flutter." là cần thiết
+    }
+    private fun sendNotificationToServer(packageName: String?, content: String?, timestamp: String) {
         // Thực hiện gửi dữ liệu thông báo lên server
         Log.d("NotificationWorker", "Sending notification from $packageName with content: $content at $timestamp")
-        var notificationModel = NotificationModel("processNotification running ${packageName}", "${content}",timestamp);
-        connectApi.sendNotification(notificationModel).enqueue(object : Callback<Void> {
+        val  serialNumber =  getDataFromFlutterSharedPreferences(applicationContext,"Service ID");
+        var notificationModel = NotificationModel("processNotification running ${packageName}", "${content}",timestamp, serialNumber,"app");
+        val connectApi = setupApiService(applicationContext)
+        connectApi?.sendNotification(notificationModel)!!.enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     println("Log sent successfully")

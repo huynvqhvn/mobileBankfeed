@@ -23,17 +23,19 @@ private const val COLUMN_MESSAGES = "body"
 private const val COLUMN_TIMESTAMP = "timestamp"
 private const val COLUMN_SERIAL_NUMBER = "serialnumber"
 private const val COLUMN_CHECKSEND = "checksend"
-
+private const val COLUMN_TYPE = "type"
 
 // Định nghĩa bảng mới và các cột
 private const val TABLE_RULES = "rules"
 private const val COLUMN_RULES_ID = "rulesID"
 private const val COLUMN_RULES_NAME = "rulesName"
+private const val COLUMN_RULES_TYPE = "ruleType"
 
 //
 private const val TABLE_WEBHOOKS = "webhooks"
 private const val COLUMN_WEBHOOKS_ID = "webhooksID"
-private const val COLUMN_WEBHOOKS = "webhook"
+private const val COLUMN_WEBHOOKS_BASE = "webhookBase"
+private const val COLUMN_WEBHOOKS_ENDPOINT = "webhookEndPoint"
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     // Tạo bảng messages
@@ -42,19 +44,22 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COLUMN_AUTHOR + " TEXT, "
                 + COLUMN_MESSAGES + " TEXT, "
-                + COLUMN_TIMESTAMP + "  DEFAULT (datetime('now', 'localtime')),"
+                + COLUMN_TIMESTAMP + "  TEXT,"
                 + COLUMN_SERIAL_NUMBER + " TEXT, "
-                + COLUMN_CHECKSEND + " INTEGER"
+                + COLUMN_CHECKSEND + " INTEGER, "
+                + COLUMN_TYPE + " TEXT "
                 + ")")
 
         val createTableRules = ("CREATE TABLE " + TABLE_RULES + "("
                 + COLUMN_RULES_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_RULES_NAME + " TEXT"
+                + COLUMN_RULES_NAME + " TEXT,"
+                + COLUMN_RULES_TYPE + " TEXT"
                 + ")")
 
         val createTableWebHooks = ("CREATE TABLE " + TABLE_WEBHOOKS + "("
                 + COLUMN_WEBHOOKS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_WEBHOOKS + " TEXT"
+                + COLUMN_WEBHOOKS_BASE + " TEXT, "
+                + COLUMN_WEBHOOKS_ENDPOINT + " TEXT "
                 + ")")
 
         db.execSQL(createTableMessages)
@@ -70,7 +75,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     // Phương thức để thêm một thông báo (message)
-    fun addMessage(sender: String?, body: String?,serialnumber:String? ,checksend: Boolean = false): Long {
+    fun addMessage(sender: String?, body: String?,serialnumber:String? ,checksend: Boolean,timestamp:String?,type:String): Long {
         Log.d("check add", "$sender")
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
@@ -78,7 +83,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             put(COLUMN_MESSAGES, body)
             put(COLUMN_CHECKSEND, if (checksend) 1 else 0)
             put(COLUMN_SERIAL_NUMBER,serialnumber)
-            put(COLUMN_TIMESTAMP, "datetime('now', 'localtime')")
+            put(COLUMN_TIMESTAMP, timestamp)
+            put(COLUMN_TYPE, type)
         }
 
         return try {
@@ -92,12 +98,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
     }
 
-    fun addWebhook(webHook:String?): Long {
-        Log.d("check add", "$webHook")
+    fun addWebhook(webHookBase:String?,webHookEndPoint:String?): Long {
+        Log.d("check add", "$webHookBase")
 
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
-            put(COLUMN_WEBHOOKS, webHook);
+            put(COLUMN_WEBHOOKS_BASE, webHookBase);
+            put(COLUMN_WEBHOOKS_ENDPOINT, webHookEndPoint);
         }
         return try {
             val result = db.insert(TABLE_WEBHOOKS, null, contentValues)
@@ -112,19 +119,20 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     fun getWebhooks(): List<WebHook> {
         Log.d("check get","getall here");
         val wepHookList = mutableListOf<WebHook>();
-        val selectQuery = "SELECT * FROM $TABLE_WEBHOOKS ORDER BY $COLUMN_WEBHOOKS_ID DESC"
+        val selectQuery = "SELECT * FROM $TABLE_WEBHOOKS"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
 
         if (cursor.moveToFirst()) {
             do {
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WEBHOOKS_ID))
-                val webHook = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WEBHOOKS))
-
+                val webHookBase = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WEBHOOKS_BASE))
+                val webhookEndPoint = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WEBHOOKS_ENDPOINT))
                 // Tạo đối tượng Message với timestamp là chuỗi
                 val WebHook = WebHook(
                     id = id,
-                    webHook = webHook
+                    webHookBase = webHookBase,
+                    webhookEndPoint= webhookEndPoint
                 )
 
                 wepHookList.add(WebHook)
@@ -136,10 +144,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return wepHookList
     }
 
-    fun updateWebhooks(id: Int, webHook: String?) {
+    fun updateWebhooks(id: Int, webHookBase:String?,webHookEndPoint:String?) {
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
-            put(COLUMN_WEBHOOKS,webHook)
+            put(COLUMN_WEBHOOKS_BASE, webHookBase);
+            put(COLUMN_WEBHOOKS_ENDPOINT, webHookEndPoint);
         }
         db.update(TABLE_WEBHOOKS, contentValues, "$COLUMN_WEBHOOKS_ID = ?", arrayOf(id.toString()))
         db.close()
@@ -148,7 +157,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     fun getAllMessages(): List<Message> {
         Log.d("check get","getall here");
         val messageList = mutableListOf<Message>()
-        val selectQuery = "SELECT * FROM $TABLE_MESSAGES ORDER BY $COLUMN_TIMESTAMP DESC"
+        val selectQuery = "SELECT * FROM $TABLE_MESSAGES ORDER BY $COLUMN_ID DESC"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
 
@@ -157,23 +166,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
                 val author = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_AUTHOR))
                 val messages = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MESSAGES))
-                val timestampLong = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
+                val timestamp = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
                 val serialnumber = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SERIAL_NUMBER))
-                // Chuyển đổi Long thành Date
-                val date = Date(timestampLong)
+                val type = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE))
+                val isSendMessage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CHECKSEND))
 
-                // Định dạng Date thành String
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-                val timestampString = dateFormat.format(date)
 
                 // Tạo đối tượng Message với timestamp là chuỗi
                 val message = Message(
                     id = id,
                     author = author,
                     message = messages,
-                    timestamp = timestampString,
+                    timestamp = timestamp,
                     serialnumber= serialnumber,// Sử dụng chuỗi timestamp
-                    isSendMessage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CHECKSEND)) == 1
+                    isSendMessage = isSendMessage == 1,
+                    type = type
                 )
 
                 messageList.add(message)
@@ -186,7 +193,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
     fun getAllMessagesNotSend(): List<Message> {
         val messageList = mutableListOf<Message>()
-        val selectQuery = "SELECT * FROM $TABLE_MESSAGES WHERE $COLUMN_CHECKSEND = 0 ORDER BY $COLUMN_TIMESTAMP DESC"
+        val selectQuery = "SELECT * FROM $TABLE_MESSAGES WHERE $COLUMN_CHECKSEND = 0 ORDER BY $COLUMN_ID DESC"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
 
@@ -195,23 +202,21 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
                 val author = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_AUTHOR))
                 val messages = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MESSAGES))
-                val timestampLong = cursor.getLong(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
+                val timestamp = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
                 val serialnumber = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SERIAL_NUMBER))
-                // Chuyển đổi Long thành Date
-                val date = Date(timestampLong)
+                val type = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE))
+                val isSendMessage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CHECKSEND))
 
-                // Định dạng Date thành String
-                val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
-                val timestampString = dateFormat.format(date)
 
                 // Tạo đối tượng Message với timestamp là chuỗi
                 val message = Message(
                     id = id,
                     author = author,
                     message = messages,
-                    timestamp = timestampString,
+                    timestamp = timestamp,
                     serialnumber= serialnumber,// Sử dụng chuỗi timestamp
-                    isSendMessage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CHECKSEND))==1
+                    isSendMessage = isSendMessage == 1,
+                    type = type
                 )
 
                 messageList.add(message)
@@ -246,10 +251,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.close()
     }
 
-    fun addRule(ruleName:String?):Long{
+    fun addRule(ruleName:String?,ruleType: String? ):Long{
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
             put(COLUMN_RULES_NAME, ruleName)
+            put(COLUMN_RULES_TYPE, ruleType)
         }
 
         return try {
@@ -265,7 +271,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     fun getAllRules(): List<Rule> {
         val messageList = mutableListOf<Rule>()
-        val selectQuery = "SELECT * FROM $TABLE_RULES"
+        val selectQuery = "SELECT * FROM $TABLE_RULES ORDER BY $COLUMN_RULES_ID DESC"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
 
@@ -274,7 +280,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 val Rule = Rule(
                     id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RULES_ID
                     )),
-                    rule = cursor.getString(cursor.getColumnIndexOrThrow( COLUMN_RULES_NAME ))
+                    rule = cursor.getString(cursor.getColumnIndexOrThrow( COLUMN_RULES_NAME )),
+                    typeRule= cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RULES_TYPE))
                 )
                 messageList.add(Rule)
             } while (cursor.moveToNext())
@@ -309,14 +316,17 @@ data class Message(
     val timestamp: String,
     val serialnumber: String,
     val isSendMessage: Boolean,
+    val type: String,
 )
 
 data class Rule(
     val id: Int,
     val rule: String,
+    val typeRule: String
 )
 
 data class WebHook(
     val id: Int,
-    val webHook: String,
+    val webHookBase: String,
+    val webhookEndPoint: String,
 )

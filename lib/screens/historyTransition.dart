@@ -22,7 +22,7 @@ class _HistoryTransitionState extends State<HistoryTransition> {
     await Future.delayed(Duration(seconds: 3));
     try {
       listSms = await NativeDataChannel.getNativeData();
-      print("listSmsLEngth: ${listSms.length}");
+      print("listSmsLEngth: ${listSms[0].timestamp}");
       // Kiểm tra xem danh sách có rỗng không
       if (listSms.isNotEmpty) {
         if (mounted) {

@@ -7,6 +7,8 @@ class SmsModel {
   String author;
   String message;
   String timestamp;
+  String serial_number;
+  String type;
   bool isSendMessage;
 
   SmsModel({
@@ -14,6 +16,8 @@ class SmsModel {
     required this.author,
     required this.message,
     required this.timestamp,
+    required this.serial_number, // required parameter
+    required this.type, // required parameter
     required this.isSendMessage,
   });
   factory SmsModel.fromJson(Map<String, dynamic> json) {
@@ -25,12 +29,14 @@ class SmsModel {
           "No message", // Sử dụng "No message" nếu `messages` là null
       timestamp:
           json['timestamp'] ?? "", // Sử dụng chuỗi rỗng nếu `timestamp` là null
+      serial_number: json['serialnumber'] ?? "",
+      type: json['type'] ?? "",
       isSendMessage: json['isSendMessage'] ??
           false, // Sử dụng false nếu `isSendMessage` là null
     );
   }
   @override
   String toString() {
-    return '{id: $id, author: $author, message: $message, timestamp: ${DateTime.parse(timestamp)}}';
+    return '{id: $id, author: $author, message: $message, timestamp: ${timestamp},serial_number:${serial_number},type:${type}}';
   }
 }

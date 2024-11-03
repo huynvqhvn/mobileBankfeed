@@ -171,6 +171,8 @@ class _$SmsDao extends SmsDao {
             author: row['author'] as String,
             message: row['message'] as String,
             timestamp: row['timestamp'] as String,
+            serial_number: row['serialnumber'] as String,
+            type: row['type'] as String,
             isSendMessage: (row['isSendMessage'] as int) != 0));
   }
 
@@ -182,6 +184,8 @@ class _$SmsDao extends SmsDao {
             author: row['author'] as String,
             message: row['message'] as String,
             timestamp: row['timestamp'] as String,
+            serial_number: row['serialnumber'] as String,
+            type: row['type'] as String,
             isSendMessage: (row['isSendMessage'] as int) != 0),
         arguments: [id],
         queryableName: 'SmsModel',

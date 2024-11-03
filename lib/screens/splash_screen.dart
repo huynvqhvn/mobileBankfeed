@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:lottie/lottie.dart';
-import 'login.dart';
 import '../Component/bottomNavigationBar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -49,12 +48,21 @@ class _SplashScreenState extends State<SplashScreen> {
                   Text(
                     "Bank Feed",
                     style: TextStyle(
-                      fontSize: 30,
+                      fontSize: 35,
                       fontWeight: FontWeight.bold,
                       color: Colors.red, // Màu chữ tùy chỉnh
                     ),
                     textAlign: TextAlign.center,
                   ),
+                    SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.center,
+                    child: LoadingAnimationWidget.flickr(
+                      leftDotColor: Colors.red,
+                      rightDotColor: Colors.blue,
+                      size: 50,
+                    ),
+                  )
                 ],
               ),
             ),

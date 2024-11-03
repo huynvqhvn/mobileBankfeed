@@ -1,26 +1,33 @@
+import 'dart:ffi';
+
 import 'package:floor/floor.dart';
 class Rule {
-  final String keySearch; // Sửa tên thuộc tính
+  final int id;
+  final String rulesName; // Tên thuộc tính trong lớp
+  final String rulesType;
 
   const Rule({
-    required this.keySearch,
+    required this.id,
+    required this.rulesName,
+    required this.rulesType,
   });
 
+  // Phương thức fromJson để khởi tạo Rule từ Map
   factory Rule.fromJson(Map<String, dynamic> json) {
-    return switch (json) {
-      {
-        'keySearch': String keySearch,
-      } =>
-        Rule(
-          keySearch: keySearch,
-        ),
-      _ => throw const FormatException('Failed to load album.'),
-    };
+    // Kiểm tra và lấy giá trị từ JSON Map
+    if (json.containsKey('id') && json.containsKey('rule') && json.containsKey('typeRule')) {
+      return Rule(
+        id: json['id'] as int,
+        rulesName: json['rule'] as String, // Sử dụng 'rule' cho tên trong JSON
+        rulesType: json['typeRule'] as String, // Sử dụng 'typeRule' cho loại trong JSON
+      );
+    } else {
+      throw const FormatException('Failed to load album.');
+    }
   }
 
   @override
   String toString() {
-    // TODO: implement toString
-   return keySearch; 
+    return '{id: $id, rulesName: $rulesName, rulesType: $rulesType}';
   }
 }

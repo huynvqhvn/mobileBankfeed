@@ -37,7 +37,7 @@ class ConnectToBe {
       final List<Rule> rules =
           jsonData.map((item) => Rule.fromJson(item)).toList();
       print("Test 1");
-      rules.forEach((rule) => {print('${rule.keySearch}' + "smsRule")});
+      rules.forEach((rule) => {print('${rule.rulesName}' + "smsRule")});
       return rules; // Trả về danh sách tài khoản
     } else {
       print("Failed to load rule");
