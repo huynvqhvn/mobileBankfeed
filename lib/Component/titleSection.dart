@@ -18,7 +18,7 @@ class TitleSection extends StatelessWidget {
       style: const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 28,
-        color: Colors.red, // Sử dụng Colors.red thay vì "red"
+        color: Color(0xFFeb4444), // Sử dụng Colors.red thay vì "red"
       ),
     );
   }

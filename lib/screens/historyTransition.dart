@@ -11,7 +11,9 @@ class HistoryTransition extends StatefulWidget {
 
 class _HistoryTransitionState extends State<HistoryTransition> {
   late List<SmsModel> listSms = [];
+  bool statusAsync = false;
   bool statusScreen = false;
+  bool light = false;
   @override
   void initState() {
     super.initState();
@@ -22,18 +24,50 @@ class _HistoryTransitionState extends State<HistoryTransition> {
     await Future.delayed(Duration(seconds: 3));
     try {
       listSms = await NativeDataChannel.getNativeData();
-      print("listSmsLEngth: ${listSms[0].timestamp}");
+      statusAsync = await NativeDataChannel.getStatusAsync();
+      print("statusAsync ${statusAsync}");
       // Kiểm tra xem danh sách có rỗng không
       if (listSms.isNotEmpty) {
         if (mounted) {
           setState(() {
             statusScreen =
                 true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+            light = statusAsync;
           });
         }
+      } else {
+        setState(() {
+          statusScreen =
+              true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+          light = statusAsync;
+        });
       }
     } catch (e) {
       print("Có lỗi xảy ra: $e");
+    }
+  }
+
+  Future<void> settingAsync(bool valueBool) async {
+    //check webhook exits
+    String? useWeebHook = "";
+    useWeebHook = await NativeDataChannel.getDataWebhook();
+    print("${useWeebHook}+ useWeebHook");
+    if (useWeebHook != null &&
+        useWeebHook.isNotEmpty &&
+        useWeebHook.length > 0) {
+          
+      await NativeDataChannel.postStatusAsync(valueBool);
+      setState(() {
+        light =
+            valueBool; // Cập nhật giá trị của light nếu useWeebHook có giá trị
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Vui lòng điền đầy đủ webhook của bạn'),
+          backgroundColor: Colors.blue,
+        ),
+      );
     }
   }
 
@@ -49,107 +83,132 @@ class _HistoryTransitionState extends State<HistoryTransition> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            SizedBox(height: 20),
-            !statusScreen
-                ? Align(
-                    alignment: Alignment.center,
-                    child: LoadingAnimationWidget.flickr(
-                      leftDotColor: Colors.red,
-                      rightDotColor: Colors.blue,
-                      size: 50,
+        child: !statusScreen
+            ? Align(
+                alignment: Alignment.center,
+                child: LoadingAnimationWidget.flickr(
+                  leftDotColor: Colors.red,
+                  rightDotColor: Colors.blue,
+                  size: 50,
+                ),
+              )
+            : Container(
+                width: double.infinity,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Tự động đồng bộ hóa dữ liệu",
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16), // Sửa ở đây
+                        ),
+                        Switch(
+                          // This bool value toggles the switch.
+                          value: light,
+                          activeColor: Colors.red,
+                          onChanged: (bool value) {
+                            // This is called when the user toggles the switch.
+                            settingAsync(value);
+                          },
+                        ),
+                      ],
                     ),
-                  )
-                : Expanded(
-                    child: ListView.builder(
-                      itemCount: listSms.length,
-                      itemBuilder: (context, index) {
-                        final item = listSms[index];
-                        return Card(
-                            margin: EdgeInsets.symmetric(vertical: 8),
-                            child: Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        "Nguồn nhận: ",
-                                        style: TextStyle(
+                    SizedBox(height: 20),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: listSms.length,
+                        itemBuilder: (context, index) {
+                          final item = listSms[index];
+                          return Card(
+                              margin: EdgeInsets.symmetric(vertical: 8),
+                              child: Padding(
+                                padding: const EdgeInsets.all(10.0),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "Nguồn nhận: ",
+                                          style: TextStyle(
+                                              color: Colors.red,
+                                              fontWeight:
+                                                  FontWeight.bold), // Sửa ở đây
+                                        ),
+                                        Text(item.author),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "Nội dung:  ",
+                                          style: TextStyle(
                                             color: Colors.red,
-                                            fontWeight:
-                                                FontWeight.bold), // Sửa ở đây
-                                      ),
-                                      Text(item.author),
-                                    ],
-                                  ),
-                                  SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        "Nội dung:  ",
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.bold,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          item.message,
-                                          softWrap: true,
-                                          overflow: TextOverflow.visible,
+                                        Expanded(
+                                          child: Text(
+                                            item.message,
+                                            softWrap: true,
+                                            overflow: TextOverflow.visible,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        "Thời gian:  ",
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.bold,
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "Thời gian:  ",
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                      ),
-                                      Expanded(
-                                        child: Text(
-                                          item.timestamp,
-                                          softWrap: true,
-                                          overflow: TextOverflow.visible,
+                                        Expanded(
+                                          child: Text(
+                                            item.timestamp,
+                                            softWrap: true,
+                                            overflow: TextOverflow.visible,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 10),
-                                  Row(
-                                    children: [
-                                       Text("Trạng thái:  ",
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.bold,
+                                      ],
+                                    ),
+                                    SizedBox(height: 10),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "Trạng thái:  ",
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        item.isSendMessage
-                                            ? "Đã Đồng Bộ"
-                                            : "Chưa Đồng Bộ",
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontWeight: FontWeight.bold,
+                                        Text(
+                                          item.isSendMessage
+                                              ? "Đã Đồng Bộ"
+                                              : "Chưa Đồng Bộ",
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  )
-                                ],
-                              ),
-                            ));
-                      },
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              ));
+                        },
+                      ),
                     ),
-                  ),
-          ],
-        ),
+                  ],
+                ),
+              ),
       ),
     );
   }

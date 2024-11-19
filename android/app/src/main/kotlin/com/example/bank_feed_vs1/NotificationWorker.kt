@@ -36,10 +36,12 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
     private fun sendNotificationToServer(packageName: String?, content: String?, timestamp: String) {
         // Thực hiện gửi dữ liệu thông báo lên server
         Log.d("NotificationWorker", "Sending notification from $packageName with content: $content at $timestamp")
+        val databaseHelper = DatabaseHelper(applicationContext);
         val  serialNumber =  getDataFromFlutterSharedPreferences(applicationContext,"Service ID");
         var notificationModel = NotificationModel("processNotification running ${packageName}", "${content}",timestamp, serialNumber,"app");
         val connectApi = setupApiService(applicationContext)
-        connectApi?.sendNotification(notificationModel)!!.enqueue(object : Callback<Void> {
+        val webhook = databaseHelper.getWebhooks()
+        connectApi?.sendNotification(webhook.get(0).webhookEndPoint ,notificationModel)!!.enqueue(object : Callback<Void> {
             override fun onResponse(call: Call<Void>, response: Response<Void>) {
                 if (response.isSuccessful) {
                     println("Log sent successfully")

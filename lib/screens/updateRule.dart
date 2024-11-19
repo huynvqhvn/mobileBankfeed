@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import '../model/ruleModel.dart';
 import '../service/getDataSevice.dart';
 
-class Addrule extends StatefulWidget {
+class Updaterule extends StatefulWidget {
+  final Rule rule;
+  Updaterule({required this.rule});
+
   @override
-  _AddRuleState createState() => _AddRuleState();
+  _UpdateruleState createState() => _UpdateruleState();
 }
 
-class _AddRuleState extends State<Addrule> {
+class _UpdateruleState extends State<Updaterule> {
   // Biến để lưu lựa chọn của dropdown
   String _selectedOption = 'sms';
   final TextEditingController _keySearchController = TextEditingController();
@@ -34,19 +37,19 @@ class _AddRuleState extends State<Addrule> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Thêm Quy Tắc",
+              "Cập Nhật Quy Tắc",
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
             Text(
               "Chọn loại:",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
 
             // Dropdown chọn giữa "sms" và "app"
             DropdownButtonFormField<String>(
-              value: _selectedOption,
+              value: widget.rule.rulesType,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
                 contentPadding: EdgeInsets.symmetric(horizontal: 12),
@@ -67,7 +70,7 @@ class _AddRuleState extends State<Addrule> {
 
             Text(
               "Nhập từ khóa để ghi nhận thông tin:",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
 
@@ -76,7 +79,7 @@ class _AddRuleState extends State<Addrule> {
               controller: _keySearchController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: "Nhập key search",
+                hintText: widget.rule.rulesName,
               ),
             ),
 
@@ -86,17 +89,13 @@ class _AddRuleState extends State<Addrule> {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  NativeDataChannel.postRule(
-                    _keySearchController.text,
-                    _selectedOption,
-                    context,
-                  );
+                  NativeDataChannel.updateRuleDataBase(widget.rule);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.red,
                 ),
-                child:
-                    Text('Tạo quy tắc', style: TextStyle(color: Colors.white)),
+                child: Text('Cập nhật quy tắc',
+                    style: TextStyle(color: Colors.white)),
               ),
             ),
           ],

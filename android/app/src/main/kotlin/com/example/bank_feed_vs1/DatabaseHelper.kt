@@ -36,6 +36,7 @@ private const val TABLE_WEBHOOKS = "webhooks"
 private const val COLUMN_WEBHOOKS_ID = "webhooksID"
 private const val COLUMN_WEBHOOKS_BASE = "webhookBase"
 private const val COLUMN_WEBHOOKS_ENDPOINT = "webhookEndPoint"
+private const val COLUMN_STATUS_ASYNC = "statusAsync"
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     // Tạo bảng messages
@@ -59,7 +60,8 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         val createTableWebHooks = ("CREATE TABLE " + TABLE_WEBHOOKS + "("
                 + COLUMN_WEBHOOKS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COLUMN_WEBHOOKS_BASE + " TEXT, "
-                + COLUMN_WEBHOOKS_ENDPOINT + " TEXT "
+                + COLUMN_WEBHOOKS_ENDPOINT + " TEXT, "
+                + COLUMN_STATUS_ASYNC + " INTEGER"
                 + ")")
 
         db.execSQL(createTableMessages)
@@ -98,13 +100,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
     }
 
-    fun addWebhook(webHookBase:String?,webHookEndPoint:String?): Long {
+    fun addWebhook(webHookBase:String?,webHookEndPoint:String?,statusAsync: Boolean,): Long {
         Log.d("check add", "$webHookBase")
 
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
             put(COLUMN_WEBHOOKS_BASE, webHookBase);
             put(COLUMN_WEBHOOKS_ENDPOINT, webHookEndPoint);
+            put(COLUMN_STATUS_ASYNC, if (statusAsync == true) 0 else 1);
         }
         return try {
             val result = db.insert(TABLE_WEBHOOKS, null, contentValues)
@@ -128,11 +131,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WEBHOOKS_ID))
                 val webHookBase = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WEBHOOKS_BASE))
                 val webhookEndPoint = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WEBHOOKS_ENDPOINT))
+                val statusAsync = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_STATUS_ASYNC))
+
                 // Tạo đối tượng Message với timestamp là chuỗi
                 val WebHook = WebHook(
                     id = id,
                     webHookBase = webHookBase,
-                    webhookEndPoint= webhookEndPoint
+                    webhookEndPoint= webhookEndPoint,
+                    statusAsync = statusAsync
                 )
 
                 wepHookList.add(WebHook)
@@ -145,10 +151,20 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
 
     fun updateWebhooks(id: Int, webHookBase:String?,webHookEndPoint:String?) {
+        Log.d("statusAsyncUpdate", "Boolean: ${webHookEndPoint} ")
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
             put(COLUMN_WEBHOOKS_BASE, webHookBase);
             put(COLUMN_WEBHOOKS_ENDPOINT, webHookEndPoint);
+        }
+        db.update(TABLE_WEBHOOKS, contentValues, "$COLUMN_WEBHOOKS_ID = ?", arrayOf(id.toString()))
+        db.close()
+    }
+    fun updateStatusAsync(id: Int,statusAsync: Boolean){
+        val db = this.writableDatabase
+        Log.d("statusAsyncUpdate", "Boolean: ${statusAsync} ")
+        val contentValues = ContentValues().apply {
+            put(COLUMN_STATUS_ASYNC, if (statusAsync) 0 else 1) // Sử dụng if-else đúng cách
         }
         db.update(TABLE_WEBHOOKS, contentValues, "$COLUMN_WEBHOOKS_ID = ?", arrayOf(id.toString()))
         db.close()
@@ -232,7 +248,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     fun updateMessageStatus(id: Int, checksend: Boolean) {
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
-            put(COLUMN_CHECKSEND, if (checksend) 1 else 0)
+            put(COLUMN_CHECKSEND, if (checksend) 0 else 1)
         }
         db.update(TABLE_MESSAGES, contentValues, "$COLUMN_ID = ?", arrayOf(id.toString()))
         db.close()
@@ -298,10 +314,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.close()
     }
 
-    fun updateRule(id: Int, rule: String) {
+    fun updateRule(id: Int, ruleName: String,ruleType: String) {
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
-            put(COLUMN_RULES_NAME, rule)
+            put(COLUMN_RULES_NAME, ruleName)
+            put(COLUMN_RULES_TYPE, ruleType)
         }
         db.update(TABLE_RULES, contentValues, "$COLUMN_RULES_ID = ?", arrayOf(id.toString()))
         db.close()
@@ -329,4 +346,5 @@ data class WebHook(
     val id: Int,
     val webHookBase: String,
     val webhookEndPoint: String,
+    val statusAsync: Int,
 )

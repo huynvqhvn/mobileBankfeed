@@ -1,9 +1,10 @@
-
 import 'package:flutter/material.dart';
 import '../screens/listRule.dart';
 import '../screens/historyTransition.dart';
+import '../screens/managerRule.dart';
 class BottomNavigationBarExample extends StatefulWidget {
   const BottomNavigationBarExample({super.key});
+
   @override
   State<BottomNavigationBarExample> createState() =>
       _BottomNavigationBarExampleState();
@@ -14,10 +15,14 @@ class _BottomNavigationBarExampleState
   int _selectedIndex = 0;
   static const TextStyle optionStyle =
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
-
   static const List<Widget> _widgetOptions = <Widget>[
     ListRule(),
+    ManagerRule(),
     HistoryTransition(),
+    Text(
+      'Index 3: Settings',
+      style: optionStyle,
+    ),
   ];
 
   void _onItemTapped(int index) {
@@ -26,26 +31,43 @@ class _BottomNavigationBarExampleState
     });
   }
 
+  void _navigateToTab(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.background,
       body: Center(
         child: _widgetOptions.elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.rule),
-            label: 'Danh sách quy tắc',
+            icon: Icon(Icons.home),
+            label: 'Trang chủ',
+            backgroundColor: Colors.red,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chair_alt),
-            label: 'Danh sách thông báo',
+            icon: Icon(Icons.rule),
+            label: 'Quy tắc',
+            backgroundColor: Colors.red,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.notifications),
+            label: 'Giao dịch',
+            backgroundColor: Colors.red,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle),
+            label: 'Hỗ trợ',
+            backgroundColor: Colors.red,
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.red.shade600,
+        selectedItemColor: Colors.white,
         onTap: _onItemTapped,
       ),
     );

@@ -7,6 +7,7 @@ import 'package:page_transition/page_transition.dart';
 import 'addRule.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import "managerRule.dart";
+
 class ListRule extends StatefulWidget {
   const ListRule({super.key});
   @override
@@ -43,9 +44,6 @@ class _ListRuleState extends State<ListRule> {
       // listRuleSms = await connectToBe.fetchRule();
       useWeebHook = await NativeDataChannel.getDataWebhook();
       listRule = await NativeDataChannel.getRule();
-      print("listRuleSms: $listRule");
-      print("listSms: ${listSms.length}");
-      print("useWeebHook: ${useWeebHook}");
       // Kiểm tra xem danh sách có rỗng không
       if (listRule.isNotEmpty) {
         if (mounted) {
@@ -54,12 +52,11 @@ class _ListRuleState extends State<ListRule> {
                 true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
           });
         }
-      }
-      else {
+      } else {
         setState(() {
-            statusScreen =
-                true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
-          });
+          statusScreen =
+              true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+        });
       }
     } catch (e) {
       print("Có lỗi xảy ra: $e");
@@ -72,7 +69,8 @@ class _ListRuleState extends State<ListRule> {
         r'^https:\/\/id\.staging\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=receive-sms$');
     if (regex.hasMatch(userWebhookInput)) {
       print("checkWeebhook match");
-      await NativeDataChannel.sendDataWebhookToNative(userWebhookInput);
+      await NativeDataChannel.sendDataWebhookToNative(
+          userWebhookInput, context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -161,7 +159,9 @@ class _ListRuleState extends State<ListRule> {
                                     controller: Webhook,
                                     obscureText: false,
                                     decoration: InputDecoration(
-                                      labelText: 'Nhập webhook của bạn ở đây',
+                                      hintText: useWeebHook != null
+                                          ? useWeebHook
+                                          : 'Nhập webhook của bạn ở đây',
                                       border: OutlineInputBorder(
                                         borderRadius:
                                             BorderRadius.circular(15.0),
@@ -242,7 +242,7 @@ class _ListRuleState extends State<ListRule> {
 
                     Expanded(
                       child: ListView.builder(
-                        itemCount: listRule.length,
+                        itemCount: listRule.length > 5?listRule.length - (listRule.length%2): listRule.length,
                         itemBuilder: (context, index) {
                           final item = listRule[index];
                           return Card(

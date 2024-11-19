@@ -32,16 +32,13 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _login() async {
     String usernameInput = username.text.trim();
     String passwordInput = password.text.trim();
-    print("usernameInput ${usernameInput}");
-    print("passwordInput ${passwordInput}");
     final token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
-    print("click");
     ConnectToBe connectToBe = ConnectToBe();
     if (usernameInput == 'a' && passwordInput == '1') {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', token);
-        print("click12");
+       
         Navigator.pushNamed(context, "/bottomnavigation");
       } catch (e) {
         print(e.toString());
@@ -125,7 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          print("Button Add được bấm");
         },
         child: Icon(Icons.add),
         backgroundColor: Colors.blue,

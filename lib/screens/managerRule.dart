@@ -4,8 +4,9 @@ import '../model/ruleModel.dart';
 import 'package:page_transition/page_transition.dart';
 import 'addRule.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-
+import 'updateRule.dart';
 class ManagerRule extends StatefulWidget {
+  const ManagerRule({super.key});
   @override
   _ManagerRule createState() => _ManagerRule();
 }
@@ -49,6 +50,33 @@ class _ManagerRule extends State<ManagerRule> {
     }
   }
 
+  Future<bool> _showConfirmationDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Xác nhận xóa"),
+          content: Text("Bạn có chắc chắn muốn xóa mục này không?"),
+          actions: <Widget>[
+            TextButton(
+              child: Text("Hủy"),
+              onPressed: () {
+                Navigator.of(context).pop(false); // Trả về false khi hủy
+              },
+            ),
+            TextButton(
+              child: Text("Xóa"),
+              onPressed: () {
+                Navigator.of(context).pop(true); // Trả về true khi xác nhận xóa
+              },
+            ),
+          ],
+        );
+      },
+    ).then((value) =>
+        value ?? false); // Đảm bảo trả về false nếu hộp thoại bị đóng
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,61 +103,115 @@ class _ManagerRule extends State<ManagerRule> {
               : Column(
                   // Sử dụng Column để chứa nhiều Row
                   children: [
-                    Text(
-                      "Các Quy Tắc",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.start,
-                    ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "Quy tắc nhận dữ liệu",
+                            style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16), // Sửa ở đây
+                          )
+                        ]),
                     SizedBox(height: 20),
                     Expanded(
                       child: ListView.builder(
                         itemCount: listRule.length,
                         itemBuilder: (context, index) {
                           final item = listRule[index];
-                          return Card(
-                              margin: EdgeInsets.symmetric(vertical: 8),
-                              child: Padding(
-                                padding: const EdgeInsets.all(10.0),
-                                child: Column(
+                          return Dismissible(
+                              key: Key(
+                                  item.rulesName), // Khóa duy nhất cho mỗi mục
+                              background: Container(
+                                color: Colors.red, // Màu nền khi kéo
+                                alignment: Alignment.centerRight,
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Quy tắc: ",
-                                          style: TextStyle(
-                                              color: Colors.red,
-                                              fontWeight:
-                                                  FontWeight.bold), // Sửa ở đây
-                                        ),
-                                        Text(item.rulesName),
-                                      ],
+                                    Icon(
+                                      Icons.delete,
+                                      color: Colors.white,
                                     ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Loại quy tắc:  ",
-                                          style: TextStyle(
-                                            color: Colors.red,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                            item.rulesType,
-                                            softWrap: true,
-                                            overflow: TextOverflow.visible,
-                                          ),
-                                        ),
-                                      ],
+                                    SizedBox(
+                                        width:
+                                            8), // Khoảng cách giữa biểu tượng và văn bản
+                                    Text(
+                                      "Xóa",
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ],
                                 ),
-                              ));
+                              ),
+                              direction: DismissDirection
+                                  .endToStart, // Chỉ cho phép kéo từ phải sang trái
+                              confirmDismiss: (direction) async {
+                                // Kiểm tra chiều kéo và chỉ hiển thị hộp thoại xác nhận khi kéo đủ một nửa
+                                if (direction == DismissDirection.endToStart) {
+                                  return await _showConfirmationDialog(context);
+                                }
+                                return false; // Ngăn chặn xóa nếu không kéo
+                              },
+                              onDismissed: (direction) async {
+                              },
+                              child: GestureDetector(
+                                  onTap: () {
+                                    print(
+                                        "Đã ấn vào quy tắc: ${item.rulesName}");
+                                    Navigator.push(
+                                      context,
+                                      PageTransition(
+                                        type: PageTransitionType.rightToLeft,
+                                        alignment: Alignment.topCenter,
+                                        child: Updaterule(rule:item),
+                                      ),
+                                    );
+                                    // Có thể mở hộp thoại chi tiết hoặc trang chỉnh sửa tại đây
+                                  },
+                                  child: Card(
+                                      margin: EdgeInsets.symmetric(vertical: 8),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(10.0),
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  "Quy tắc: ",
+                                                  style: TextStyle(
+                                                      color: Colors.red,
+                                                      fontWeight: FontWeight
+                                                          .bold), // Sửa ở đây
+                                                ),
+                                                Text(item.rulesName),
+                                              ],
+                                            ),
+                                            SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                Text(
+                                                  "Loại quy tắc:  ",
+                                                  style: TextStyle(
+                                                    color: Colors.red,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: Text(
+                                                    item.rulesType,
+                                                    softWrap: true,
+                                                    overflow:
+                                                        TextOverflow.visible,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ))));
                         },
                       ),
                     ),

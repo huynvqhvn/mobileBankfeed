@@ -8,6 +8,7 @@ import 'service/permistion.dart';
 import 'service/getDataSevice.dart';
 import 'screens/addRule.dart';
 import 'screens/managerRule.dart';
+import 'screens/updateRule.dart';
 void main() async {
   runApp(const HomePage());
 }

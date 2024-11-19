@@ -56,12 +56,25 @@ class NativeDataChannel {
     }
   }
 
-  static Future<void> sendDataWebhookToNative(String input) async {
+  static Future<void> sendDataWebhookToNative(
+      String input, BuildContext context) async {
     try {
       await platformWebHook.invokeMethod('userwebhook', {"input": input});
       print("Đã gửi input lên Android Native: $input");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Thêm webhook thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       print("Lỗi khi gửi dữ liệu: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Thêm webhook không thành công! ${e.toString()}'),
+          backgroundColor: Colors.green,
+        ),
+      );
     }
   }
 
@@ -78,33 +91,43 @@ class NativeDataChannel {
 
   static Future<bool> postRule(
       String rule, String typeRule, BuildContext context) async {
-    try {
-      await platformRule.invokeMethod('postRule', {
-        "ruleIn": rule,
-        "typeRule": typeRule,
-      });
+    if (rule.isNotEmpty) {
+      try {
+        await platformRule.invokeMethod('postRule', {
+          "ruleIn": rule,
+          "typeRule": typeRule,
+        });
 
-      // Hiển thị thông báo thành công
+        // Hiển thị thông báo thành công
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Thêm quy tắc thành công!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Quay lại và trả về `true` để biểu thị thành công
+        Navigator.pop(context, true);
+        return true;
+      } catch (e) {
+        print("Lỗi khi gửi dữ liệu: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
+            backgroundColor: Colors.red,
+          ),
+        );
+
+        // Trả về `false` để biểu thị thất bại
+        return false;
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Thêm quy tắc thành công!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-
-      // Quay lại và trả về `true` để biểu thị thành công
-      Navigator.pop(context, true);
-      return true;
-    } catch (e) {
-      print("Lỗi khi gửi dữ liệu: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
+          content: Text('Không được để trống!'),
           backgroundColor: Colors.red,
         ),
       );
-
-      // Trả về `false` để biểu thị thất bại
       return false;
     }
   }
@@ -120,6 +143,46 @@ class NativeDataChannel {
     } catch (e) {
       print("Lỗi khi gửi dữ liệuae2: $e");
       return [];
+    }
+  }
+
+  static Future<bool> postStatusAsync(bool statusAsync) async {
+    try {
+      await platform.invokeMethod('getAsyncData', {'asyncData': statusAsync});
+      return true;
+    } catch (e) {
+      print(e.toString());
+      return false;
+    }
+  }
+
+  static Future<bool> getStatusAsync() async {
+    try {
+      bool statusAsync = await platform.invokeMethod('getAsyncDataFlutter');
+      return statusAsync;
+    } catch (e) {
+      print("Lỗi không xác định khi nhận dữ liệu: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> updateRuleDataBase(Rule ruleUpdate) async {
+    try {
+      await platformRule.invokeMethod("updateRule", {'ruleUpdate': ruleUpdate});
+      return true;
+    } catch (e) {
+      print("Lỗi không xác định: $e");
+      return false;
+    }
+  }
+
+  static Future<bool> deleteRuleDataBase(int ruleId) async {
+    try {
+      await platformRule.invokeMethod("deleteRule", {'ruleDelete': ruleId});
+      return true;
+    } catch (e) {
+      print("Lỗi không xác định: $e");
+      return false;
     }
   }
 }

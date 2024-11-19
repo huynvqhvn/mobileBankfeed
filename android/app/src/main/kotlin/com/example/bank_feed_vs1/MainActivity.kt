@@ -14,9 +14,10 @@ class MainActivity: FlutterActivity() {
     private val CHANNELWEBHOOK = "com.bankfeed.app/webhook"
     private val CHANNELRULE = "com.bankfeed.app/rule"
     private val REQUEST_CODE = 1001
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        val serviceIntent = Intent(this, MyForegroundService::class.java)
         flutterEngine?.dartExecutor?.binaryMessenger?.let {
             MethodChannel(it, CHANNEL).setMethodCallHandler { call, result ->
                 if (call.method == "openNotificationAccessSettings") {
@@ -37,7 +38,44 @@ class MainActivity: FlutterActivity() {
                     Log.d("check data", "json: ${jsonMessages}");
                     result.success(jsonMessages ?: "[]")
 
-                } else {
+                }
+                else if (call.method == "getAsyncData"){
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val input = call.argument<Boolean>("asyncData") ?: false // Đặt giá trị mặc định là false nếu `input` là null
+                    databaseHelper.updateStatusAsync(1,input);
+                    // Khởi tạo `serviceIntent` nếu chưa khởi tạo
+                    val stringStatus = if (input) "running" else "stop"
+                    val serviceIntent = Intent(this, MyForegroundService::class.java)
+                    serviceIntent.putExtra("statusAsync",input);
+
+                    // Ghi log kiểm tra giá trị `input`
+                    Log.d("check data boolean", "json: $input")
+
+                    // Khởi động hoặc cập nhật Foreground Service
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                        startForegroundService(serviceIntent)
+                    } else {
+                        startService(serviceIntent)
+                    }
+
+                    // Trả về kết quả thành công cho Flutter
+                    result.success("Dữ liệu nhận thành công trên Android Native $input")
+
+                }
+                else if(call.method == "getAsyncDataFlutter"){
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val webHookList = databaseHelper.getWebhooks();
+                    if (!webHookList.isNullOrEmpty()) {
+                        val statusAsync = webHookList.get(0).statusAsync;
+                        Log.d("/", "${statusAsync == 0}: ")
+                        result.success(statusAsync == 0)
+                    }
+                    else{
+                        result.success(null)
+                    }
+
+                }
+                else {
                     result.notImplemented()
                 }
             }
@@ -55,7 +93,7 @@ class MainActivity: FlutterActivity() {
                         Log.d("baseUrl", "onCreate: ${endpoint} ");
                         if (webhook.isEmpty()) {
                             // Thêm webhook mới nếu danh sách trống
-                            databaseHelper.addWebhook(baseUrl,endpoint)
+                            databaseHelper.addWebhook(baseUrl,endpoint,false)
                         } else {
                             // Cập nhật webhook hiện có
                             databaseHelper.updateWebhooks(webhook[0].id, baseUrl,endpoint)
@@ -70,13 +108,22 @@ class MainActivity: FlutterActivity() {
                     if (!webHookList.isNullOrEmpty()) {
                         // Lấy phần tử đầu tiên nếu danh sách không rỗng
                         Log.d("testWebHook", "${webHookList[0]}: ")
-                        val webHook = webHookList[0].webHookBase+ webHookList[0].webhookEndPoint?: "[]"
+                        val webHook = webHookList[0].webHookBase + webHookList[0].webhookEndPoint?: "[]"
                         result.success(webHook)
                     } else {
                         // Trả về giá trị mặc định nếu danh sách rỗng
-                        result.success("[]")
+                        result.success(null)
                     }
                 }
+//                else if(call.method == "updateStatusAsync"){
+//                    val statusAsync = call.argument<Boolean>("statusAsync")
+//                    statusAsync?.let {
+//                        Log.d("NativeData", "Nhận dữ liệu từ Flutter: $it")
+//                        val databaseHelper = DatabaseHelper(applicationContext)
+//                        databaseHelper.updateStatusAsync(0,statusAsync);
+//                        result.success("Dữ liệu nhận thành công trên Android Native")
+//                    } ?: result.error("NULL_INPUT", "Input từ Flutter là null", null)
+//                }
                 else {
                     result.notImplemented()
                 }
@@ -110,13 +157,18 @@ class MainActivity: FlutterActivity() {
                         result.success("[]")
                     }
                 }
+                else if(call.method == "updateRule"){
+
+                }
+                else if (call.method =="deleteRule"){
+
+                }
                 else {
                     result.notImplemented()
                 }
             }
         }
         // Khởi động Foreground Service khi ứng dụng bắt đầu
-        val serviceIntent = Intent(this, MyForegroundService::class.java)
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)
         } else {
