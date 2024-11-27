@@ -4,6 +4,7 @@ import 'package:lottie/lottie.dart';
 import '../Component/bottomNavigationBar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
 
@@ -50,16 +51,15 @@ class _SplashScreenState extends State<SplashScreen> {
                     style: TextStyle(
                       fontSize: 35,
                       fontWeight: FontWeight.bold,
-                      color: Colors.red, // Màu chữ tùy chỉnh
+                      color: Color(0xFFc93131), // Màu chữ tùy chỉnh
                     ),
                     textAlign: TextAlign.center,
                   ),
-                    SizedBox(height: 20),
+                  SizedBox(height: 20),
                   Align(
                     alignment: Alignment.center,
-                    child: LoadingAnimationWidget.flickr(
-                      leftDotColor: Colors.red,
-                      rightDotColor: Colors.blue,
+                    child: LoadingAnimationWidget.staggeredDotsWave(
+                      color: Color(0xFFc93131),
                       size: 50,
                     ),
                   )

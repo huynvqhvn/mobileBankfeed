@@ -21,10 +21,10 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
 
         // Log dữ liệu nhận được
         Log.d("NotificationWorker", "Package: $packageName, Content: $notificationContent, Timestamp: $timestamp")
-        if(packageName == "com.google.android.apps.messaging"){
+//        if(packageName == "com.google.android.apps.messaging"){
         // Gửi dữ liệu lên server hoặc thực hiện tác vụ khác
         sendNotificationToServer(packageName, notificationContent, timestamp)
-        }
+//        }
 
         // Giả sử bạn gửi thành công
         return Result.success()
@@ -38,22 +38,39 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Worker(co
         Log.d("NotificationWorker", "Sending notification from $packageName with content: $content at $timestamp")
         val databaseHelper = DatabaseHelper(applicationContext);
         val  serialNumber =  getDataFromFlutterSharedPreferences(applicationContext,"Service ID");
-        var notificationModel = NotificationModel("processNotification running ${packageName}", "${content}",timestamp, serialNumber,"app");
         val connectApi = setupApiService(applicationContext)
         val webhook = databaseHelper.getWebhooks()
-        connectApi?.sendNotification(webhook.get(0).webhookEndPoint ,notificationModel)!!.enqueue(object : Callback<Void> {
-            override fun onResponse(call: Call<Void>, response: Response<Void>) {
-                if (response.isSuccessful) {
-                    println("Log sent successfully")
-                } else {
-                    println("Failed to send log: ${response.code()}")
+        val getRules = databaseHelper.getAllRules();
+        for (Rule in getRules ){
+            if(Rule.typeRule.equals("app") && packageName!= null && content !=null && webhook.isNotEmpty()){
+                if(packageName.contains(Rule.rule)){
+                    if (isNetworkAvailable(applicationContext)) {
+                        Log.d("SmsWorker","passpass wifi");
+                        var notification = NotificationModel("${packageName}", "${content}",timestamp,serialNumber,"app");
+                        Log.d("timestamp12345", "${notification}");
+                        connectApi?.sendNotification(webhook.get(0).webhookEndPoint ,notification)!!.enqueue(object : Callback<Void> {
+                            override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                                if (response.isSuccessful) {
+                                    println("Log sent successfully")
+                                    databaseHelper.addMessage(packageName, content, serialNumber,true,timestamp,"app");
+                                } else {
+                                    println("Failed to send log: ${response.code()}")
+                                    databaseHelper.addMessage(packageName, content, serialNumber,false,timestamp,"app");
+                                }
+                            }
+                            override fun onFailure(call: Call<Void>, t: Throwable) {
+                                println("Error sending log: ${t.message}")
+                                databaseHelper.addMessage(packageName, content, serialNumber,false,timestamp,"app");
+                            }
+                        })
+                    }
+                    else {
+                        Log.d("SmsWorker","not pass wifi");
+                        databaseHelper.addMessage(packageName, content, serialNumber,false,timestamp,"app");
+                    }
                 }
             }
-
-            override fun onFailure(call: Call<Void>, t: Throwable) {
-                println("Error sending log: ${t.message}")
-            }
-        })
+        }
         // Implement logic gửi dữ liệu lên server ở đây
     }
 }

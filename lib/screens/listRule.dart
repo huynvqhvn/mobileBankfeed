@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import '../model/ruleModel.dart';
 import '../service/connectBe.dart';
 import "../service/getDataSevice.dart";
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:page_transition/page_transition.dart';
 import 'addRule.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import "managerRule.dart";
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:url_launcher/url_launcher.dart';
 
 class ListRule extends StatefulWidget {
   const ListRule({super.key});
@@ -20,8 +25,17 @@ class _ListRuleState extends State<ListRule> {
   late String? useWeebHook = "";
   final ConnectToBe connectToBe = ConnectToBe(); // Khởi tạo instance
   late final TextEditingController Webhook;
+  late String? idService = "";
   bool statusScreen = false;
-
+  final List<String> guideSteps = [
+    "Bước 1: Mở ứng dụng.",
+    "Bước 2: Đăng nhập vào trang https://iddev.hvn.vn/",
+    "Bước 3: Vào dashboard của BankFeeds",
+    "Bước 4: Copy link webhooks của bạn",
+    "Bước 5: Trở về app BankFeeds và điền webhooks",
+    "Bước 6: Tạo các quy tắc nhận tin nhắn của bạn ở trên trang https://iddev.hvn.vn/",
+    "Bước 7: Tạo các quy tắc tương tự trên trang https://iddev.hvn.vn/ trên app điện thoại",
+  ];
   @override
   void initState() {
     super.initState();
@@ -38,12 +52,14 @@ class _ListRuleState extends State<ListRule> {
   }
 
   Future<void> initPlatformState() async {
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(seconds: 2));
     try {
       listSms = await NativeDataChannel.getNativeData();
       // listRuleSms = await connectToBe.fetchRule();
       useWeebHook = await NativeDataChannel.getDataWebhook();
       listRule = await NativeDataChannel.getRule();
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      idService = prefs.getString('Service ID');
       // Kiểm tra xem danh sách có rỗng không
       if (listRule.isNotEmpty) {
         if (mounted) {
@@ -66,7 +82,7 @@ class _ListRuleState extends State<ListRule> {
   Future<void> checkWeebhook() async {
     String userWebhookInput = Webhook.text.trim();
     RegExp regex = RegExp(
-        r'^https:\/\/id\.staging\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=receive-sms$');
+        r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+$');
     if (regex.hasMatch(userWebhookInput)) {
       print("checkWeebhook match");
       await NativeDataChannel.sendDataWebhookToNative(
@@ -80,13 +96,40 @@ class _ListRuleState extends State<ListRule> {
     }
   }
 
+  Future<void> _copyAndSave(BuildContext context) async {
+    // Sao chép dữ liệu vào clipboard
+    await Clipboard.setData(ClipboardData(text: idService!));
+
+    // Lưu dữ liệu vào bộ nhớ tạm
+    final directory = await getTemporaryDirectory();
+    final file = File('${directory.path}/clipboard_data.txt');
+    await file.writeAsString(idService!);
+
+    // Hiển thị thông báo
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Đã sao chép: $idService'),
+        backgroundColor: Colors.green,
+      ),
+    );
+  }
+
+  // Hàm mở URL
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.inAppBrowserView)) {
+      throw Exception('Could not launch $url');
+    }
+    await launchUrl(uri, mode: LaunchMode.inAppBrowserView);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Bank Feed"),
         centerTitle: true,
-        backgroundColor: Colors.red,
+        backgroundColor: Color(0xFFc93131),
         titleTextStyle: TextStyle(
             fontWeight: FontWeight.bold, fontSize: 30, color: Colors.white),
       ),
@@ -97,39 +140,46 @@ class _ListRuleState extends State<ListRule> {
           child: !statusScreen
               ? Align(
                   alignment: Alignment.center,
-                  child: LoadingAnimationWidget.flickr(
-                    leftDotColor: Colors.red,
-                    rightDotColor: Colors.blue,
+                  child: LoadingAnimationWidget.staggeredDotsWave(
+                    color: Color(0xFFc93131),
                     size: 50,
                   ),
                 )
               : Column(
                   // Sử dụng Column để chứa nhiều Row
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 5,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment
-                                .start, // Căn chỉnh từ trên xuống
-                            children: [
-                              SizedBox(height: 10),
-                              Text(
-                                "Đề các thiết bị của bạn phản ứng, với các thay đổi về điều kiện.",
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                  fontFamily: "Montserrat",
-                                ),
-                              ),
-                            ],
+                    Row(children: [
+                      Text(
+                        "Serial thiết bị : ",
+                        style: const TextStyle(
+                            fontSize: 16,
+                            color: Color(0xFFc93131),
+                            fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center, // Căn giữa văn bản
+                      ),
+                      Text(
+                        idService!,
+                        style:
+                            const TextStyle(fontSize: 16, color: Colors.black),
+                        textAlign: TextAlign.center, // Căn giữa văn bản
+                      ),
+                      SizedBox(width: 10),
+                      ElevatedButton(
+                        onPressed: () {
+                          _copyAndSave(context);
+                        },
+                        child: Icon(Icons.copy, size: 20),
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(5, 35),
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(8), // Bán kính góc
                           ),
+                          backgroundColor: Colors.white, // Màu nền
                         ),
-                      ],
-                    ),
-                    SizedBox(height: 30), // Khoảng cách giữa các Row
+                      )
+                    ]),
+                    SizedBox(height: 20), // Khoảng cách giữa các Row
                     Row(
                       children: [
                         Expanded(
@@ -143,7 +193,7 @@ class _ListRuleState extends State<ListRule> {
                                 children: [
                                   Icon(
                                     Icons.mobile_screen_share_outlined,
-                                    color: Colors.red,
+                                    color: Color(0xFFc93131),
                                     size: 60,
                                   ),
                                   SizedBox(height: 20),
@@ -190,7 +240,8 @@ class _ListRuleState extends State<ListRule> {
                                           borderRadius: BorderRadius.circular(
                                               8), // Bán kính góc
                                         ),
-                                        backgroundColor: Colors.red, // Màu nền
+                                        backgroundColor:
+                                            Color(0xFFc93131), // Màu nền
                                       ),
                                     ),
                                   ),
@@ -202,89 +253,84 @@ class _ListRuleState extends State<ListRule> {
                       ],
                     ),
                     SizedBox(height: 20),
-
                     Row(mainAxisAlignment: MainAxisAlignment.start, children: [
                       Row(
                         children: [
                           Text(
-                            "Các Quy Tắc",
+                            "Hướng Dẫn Sử Dụng",
                             style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.red,
+                              fontSize: 18,
+                              color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                             textAlign: TextAlign.start,
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                PageTransition(
-                                  type: PageTransitionType.rightToLeft,
-                                  alignment: Alignment.topCenter,
-                                  child: ManagerRule(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              "Xem Tất Cả",
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.red,
-                              ),
-                            ),
                           ),
                         ],
                       ),
                       SizedBox(height: 20),
                     ]),
                     SizedBox(height: 15),
-
-                    Expanded(
+                    Container(
+                      height: 200, // Chiều cao cụ thể cho ListView
                       child: ListView.builder(
-                        itemCount: listRule.length > 5?listRule.length - (listRule.length%2): listRule.length,
+                        itemCount: guideSteps.length,
                         itemBuilder: (context, index) {
-                          final item = listRule[index];
-                          return Card(
-                              margin: EdgeInsets.symmetric(vertical: 8),
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Column(
+                          final step = guideSteps[index];
+
+                          // Tìm link trong chuỗi
+                          final RegExp linkRegex = RegExp(r'https?:\/\/[^\s]+');
+                          final match = linkRegex.firstMatch(step);
+                          if (match != null) {
+                            final link = match.group(0); // Lấy URL từ chuỗi
+                            final parts =
+                                step.split(link!); // Chia chuỗi theo link
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 16.0),
+                              child: RichText(
+                                text: TextSpan(
                                   children: [
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Quy tắc: ",
-                                          style: TextStyle(
-                                              color: Colors.red,
-                                              fontWeight:
-                                                  FontWeight.bold), // Sửa ở đây
-                                        ),
-                                        Text(item.rulesName),
-                                      ],
+                                    TextSpan(
+                                      text: parts[0], // Phần trước URL
+                                      style: TextStyle(
+                                          color: Colors.black, fontSize: 16),
                                     ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Loại quy tắc:  ",
+                                    WidgetSpan(
+                                      child: GestureDetector(
+                                        onTap: () => _launchURL(link),
+                                        child: Text(
+                                          link,
                                           style: TextStyle(
-                                            color: Colors.red,
-                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFFc93131),
+                                            decoration:
+                                                TextDecoration.underline,
+                                            fontSize: 16,
                                           ),
                                         ),
-                                        Expanded(
-                                          child: Text(
-                                            item.rulesType,
-                                            softWrap: true,
-                                            overflow: TextOverflow.visible,
-                                          ),
-                                        ),
-                                      ],
+                                      ),
                                     ),
+                                    if (parts.length > 1)
+                                      TextSpan(
+                                        text: parts[1], // Phần sau URL
+                                        style: TextStyle(
+                                            color: Colors.black, fontSize: 16),
+                                      ),
                                   ],
                                 ),
-                              ));
+                              ),
+                            );
+                          } else {
+                            // Không có URL
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 16.0),
+                              child: Text(
+                                step,
+                                style: TextStyle(
+                                    color: Colors.black, fontSize: 16),
+                              ),
+                            );
+                          }
                         },
                       ),
                     ),

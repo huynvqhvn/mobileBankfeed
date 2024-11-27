@@ -5,6 +5,7 @@ import 'package:page_transition/page_transition.dart';
 import 'addRule.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'updateRule.dart';
+
 class ManagerRule extends StatefulWidget {
   const ManagerRule({super.key});
   @override
@@ -28,7 +29,7 @@ class _ManagerRule extends State<ManagerRule> {
   }
 
   Future<void> initPlatformState() async {
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(seconds: 2));
     try {
       listRule = await NativeDataChannel.getRule();
       // Kiểm tra xem danh sách có rỗng không
@@ -83,7 +84,7 @@ class _ManagerRule extends State<ManagerRule> {
       appBar: AppBar(
         title: const Text("Bank Feed"),
         centerTitle: true,
-        backgroundColor: Colors.red,
+        backgroundColor: Color(0xFFc93131),
         titleTextStyle: TextStyle(
             fontWeight: FontWeight.bold, fontSize: 30, color: Colors.white),
       ),
@@ -94,9 +95,8 @@ class _ManagerRule extends State<ManagerRule> {
           child: !statusScreen
               ? Align(
                   alignment: Alignment.center,
-                  child: LoadingAnimationWidget.flickr(
-                    leftDotColor: Colors.red,
-                    rightDotColor: Colors.blue,
+                  child: LoadingAnimationWidget.staggeredDotsWave(
+                    color: Color(0xFFc93131),
                     size: 50,
                   ),
                 )
@@ -111,9 +111,26 @@ class _ManagerRule extends State<ManagerRule> {
                             style: TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16), // Sửa ở đây
+                                fontSize: 18), // Sửa ở đây
                           )
                         ]),
+                    SizedBox(height: 10),
+                    RichText(
+                      text: TextSpan(children: [
+                        TextSpan(
+                            text:
+                                "! Nếu bạn muốn cập nhật quy tắc hãy ấn vào quy tắc đó\n",
+                            style: TextStyle(
+                                color: Color(0xFFc93131),
+                                fontStyle: FontStyle.italic)),
+                        TextSpan(
+                            text:
+                                "! Nếu bạn muốn xóa quy tắc hay kéo quy tắc sang trái và xác nhận",
+                            style: TextStyle(
+                                color: Color(0xFFc93131),
+                                fontStyle: FontStyle.italic))
+                      ]),
+                    ),
                     SizedBox(height: 20),
                     Expanded(
                       child: ListView.builder(
@@ -124,7 +141,7 @@ class _ManagerRule extends State<ManagerRule> {
                               key: Key(
                                   item.rulesName), // Khóa duy nhất cho mỗi mục
                               background: Container(
-                                color: Colors.red, // Màu nền khi kéo
+                                color: Color(0xFFc93131), // Màu nền khi kéo
                                 alignment: Alignment.centerRight,
                                 padding: EdgeInsets.symmetric(horizontal: 20),
                                 child: Row(
@@ -156,22 +173,32 @@ class _ManagerRule extends State<ManagerRule> {
                                 return false; // Ngăn chặn xóa nếu không kéo
                               },
                               onDismissed: (direction) async {
+                                await NativeDataChannel.deleteRuleDataBase(
+                                    item.id, context);
                               },
                               child: GestureDetector(
-                                  onTap: () {
+                                  onTap: () async {
                                     print(
                                         "Đã ấn vào quy tắc: ${item.rulesName}");
-                                    Navigator.push(
+                                    final status = await Navigator.push(
                                       context,
                                       PageTransition(
                                         type: PageTransitionType.rightToLeft,
                                         alignment: Alignment.topCenter,
-                                        child: Updaterule(rule:item),
+                                        child: Updaterule(rule: item),
                                       ),
                                     );
                                     // Có thể mở hộp thoại chi tiết hoặc trang chỉnh sửa tại đây
+                                    if (status == true) {
+                                      setState(() {
+                                        statusScreen =
+                                            false; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+                                      });
+                                      initPlatformState(); // Hàm reload danh sách Rule nếu `shouldReload` là `true`
+                                    }
                                   },
                                   child: Card(
+                                      color: Colors.white,
                                       margin: EdgeInsets.symmetric(vertical: 8),
                                       child: Padding(
                                         padding: const EdgeInsets.all(10.0),
@@ -182,7 +209,7 @@ class _ManagerRule extends State<ManagerRule> {
                                                 Text(
                                                   "Quy tắc: ",
                                                   style: TextStyle(
-                                                      color: Colors.red,
+                                                      color: Color(0xFFc93131),
                                                       fontWeight: FontWeight
                                                           .bold), // Sửa ở đây
                                                 ),
@@ -195,7 +222,7 @@ class _ManagerRule extends State<ManagerRule> {
                                                 Text(
                                                   "Loại quy tắc:  ",
                                                   style: TextStyle(
-                                                    color: Colors.red,
+                                                    color: Color(0xFFc93131),
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
@@ -237,8 +264,11 @@ class _ManagerRule extends State<ManagerRule> {
             initPlatformState(); // Hàm reload danh sách Rule nếu `shouldReload` là `true`
           }
         },
-        child: Icon(Icons.add),
-        backgroundColor: Colors.red,
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+        backgroundColor: Color(0xFFc93131),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );

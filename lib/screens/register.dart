@@ -13,7 +13,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Bank Feed'),
-        backgroundColor: Colors.red,
+        backgroundColor:  Color(0xFFc93131),
       ),
       body: Center(
         child: Column(
@@ -68,7 +68,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ElevatedButton(
                     onPressed: () {},
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
+                      backgroundColor:  Color(0xFFc93131),
                     ),
                     child: Text('Verify', style: TextStyle(color: Colors.white)),
                   ),
@@ -80,7 +80,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: ElevatedButton(
                 onPressed: () {},
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor:  Color(0xFFc93131),
                 ),
                 child: Text('Đăng Ký', style: TextStyle(color: Colors.white)),
               ),
@@ -89,7 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               padding: const EdgeInsets.all(16.0),
               child: TextButton(
                 onPressed: () {},
-                child: Text('Đăng Nhập', style: TextStyle(color: Colors.red)),
+                child: Text('Đăng Nhập', style: TextStyle(color:  Color(0xFFc93131))),
               ),
             ),
             Padding(

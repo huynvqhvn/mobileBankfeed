@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Bank Feed'),
-        backgroundColor: Colors.red,
+        backgroundColor:  Color(0xFFc93131),
       ),
       body: Center(
         child: Column(
@@ -87,7 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
               child: ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor:  Color(0xFFc93131),
                 ),
                 child: Text('Đăng Nhập', style: TextStyle(color: Colors.white)),
               ),
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextButton(
                     onPressed: () {},
                     child: Text('Quên Mật Khẩu',
-                        style: TextStyle(color: Colors.red)),
+                        style: TextStyle(color:  Color(0xFFc93131))),
                   ),
                 ],
               ),

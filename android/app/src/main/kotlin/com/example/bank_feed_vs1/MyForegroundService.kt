@@ -26,6 +26,7 @@ class MyForegroundService : Service() {
             val databaseHelper = DatabaseHelper(applicationContext);
             val connectApi = setupApiService(applicationContext)
             val checkData = databaseHelper.getAllMessagesNotSend();
+            Log.d("checkData", "${checkData}")
             val webhook = databaseHelper.getWebhooks()
             if(checkData.isNotEmpty()){
                 for (x in checkData) {
@@ -34,7 +35,8 @@ class MyForegroundService : Service() {
                         Callback<Void> {
                         override fun onResponse(call: Call<Void>, response: Response<Void>) {
                             if (response.isSuccessful) {
-                                println("Log sent sms successfully")
+                                println("Log sent sms successfully ${response}")
+                                databaseHelper.updateMessageStatus(x.id,true);
                             } else {
                                 println("Failed to send log: ${response.code()}");
                             }
@@ -65,9 +67,15 @@ class MyForegroundService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         // Lấy dữ liệu từ Intent nếu có
-        val data = intent?.getBooleanExtra("statusAsync",false)
-        Log.d("MyService", "Received data: $data")
-
+        var data: Boolean? = null;
+        val databaseHelper = DatabaseHelper(applicationContext);
+        val checkStatusAsync = databaseHelper.getWebhooks();
+        if(checkStatusAsync.isNotEmpty()){
+            data = checkStatusAsync[0].statusAsync == 0
+        }else{
+            data = intent?.getBooleanExtra("statusAsync",false)
+            Log.d("MyService", "Received data: $data")
+        }
 // Tạo Runnable cho tác vụ lặp lại
         if(data == true){
             // Bắt đầu tác vụ lặp lại

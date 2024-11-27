@@ -15,7 +15,7 @@ class _Addrule extends State<Addrule> {
   }
 
   Future<void> initPlatformState() async {
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(seconds: 2));
     try {
       // Kiểm tra xem danh sách có rỗng không
       if (mounted) {
@@ -35,7 +35,7 @@ class _Addrule extends State<Addrule> {
       appBar: AppBar(
         title: const Text("Bank Feed"),
         centerTitle: true,
-        backgroundColor: Colors.red,
+        backgroundColor:  Color(0xFFc93131),
         titleTextStyle: TextStyle(
             fontWeight: FontWeight.bold, fontSize: 30, color: Colors.white),
       ),

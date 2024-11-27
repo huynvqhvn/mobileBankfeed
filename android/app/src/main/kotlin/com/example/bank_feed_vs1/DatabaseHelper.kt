@@ -83,7 +83,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         val contentValues = ContentValues().apply {
             put(COLUMN_AUTHOR, sender)
             put(COLUMN_MESSAGES, body)
-            put(COLUMN_CHECKSEND, if (checksend) 1 else 0)
+            put(COLUMN_CHECKSEND, if (checksend) 0 else 1)
             put(COLUMN_SERIAL_NUMBER,serialnumber)
             put(COLUMN_TIMESTAMP, timestamp)
             put(COLUMN_TYPE, type)
@@ -149,7 +149,44 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.close()
         return wepHookList
     }
+    fun  checkMessagesExit(sender: String?,message: String?,timestamp: String): Boolean {
+        Log.d("${sender}", "checkMessagesExit: ")
+        val messageList = mutableListOf<Message>()
+        val selectQuery = "SELECT * FROM $TABLE_MESSAGES WHERE $COLUMN_AUTHOR = ? AND $COLUMN_MESSAGES = ? AND $COLUMN_TIMESTAMP = ? ORDER BY $COLUMN_ID DESC"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery,arrayOf(sender, message,timestamp))
 
+        if (cursor.moveToFirst()) {
+            do {
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
+                val author = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_AUTHOR))
+                val messages = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_MESSAGES))
+                val timestamp = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TIMESTAMP))
+                val serialnumber = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_SERIAL_NUMBER))
+                val type = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPE))
+                val isSendMessage = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_CHECKSEND))
+
+
+                // Tạo đối tượng Message với timestamp là chuỗi
+                val message = Message(
+                    id = id,
+                    author = author,
+                    message = messages,
+                    timestamp = timestamp,
+                    serialnumber= serialnumber,// Sử dụng chuỗi timestamp
+                    isSendMessage = isSendMessage == 0,
+                    type = type
+                )
+
+                messageList.add(message)
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        db.close()
+        Log.d("checkMessagesExit", "checkMessagesExit: ${messageList}")
+        return messageList.isEmpty();
+    }
     fun updateWebhooks(id: Int, webHookBase:String?,webHookEndPoint:String?) {
         Log.d("statusAsyncUpdate", "Boolean: ${webHookEndPoint} ")
         val db = this.writableDatabase
@@ -195,7 +232,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                     message = messages,
                     timestamp = timestamp,
                     serialnumber= serialnumber,// Sử dụng chuỗi timestamp
-                    isSendMessage = isSendMessage == 1,
+                    isSendMessage = isSendMessage == 0,
                     type = type
                 )
 
@@ -209,7 +246,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
     fun getAllMessagesNotSend(): List<Message> {
         val messageList = mutableListOf<Message>()
-        val selectQuery = "SELECT * FROM $TABLE_MESSAGES WHERE $COLUMN_CHECKSEND = 0 ORDER BY $COLUMN_ID DESC"
+        val selectQuery = "SELECT * FROM $TABLE_MESSAGES WHERE $COLUMN_CHECKSEND = 1 ORDER BY $COLUMN_ID DESC"
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
 
@@ -231,7 +268,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                     message = messages,
                     timestamp = timestamp,
                     serialnumber= serialnumber,// Sử dụng chuỗi timestamp
-                    isSendMessage = isSendMessage == 1,
+                    isSendMessage = isSendMessage == 0,
                     type = type
                 )
 
@@ -246,6 +283,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
     // Cập nhật trạng thái checksend của thông báo
     fun updateMessageStatus(id: Int, checksend: Boolean) {
+        println("${id}, ${checksend}")
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
             put(COLUMN_CHECKSEND, if (checksend) 0 else 1)
@@ -308,13 +346,14 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         return messageList
     }
 
-    fun deleteRule(id: Int) {
+    fun deleteRule(id: Int?) {
         val db = this.writableDatabase
         db.execSQL("DELETE FROM $TABLE_RULES WHERE $COLUMN_RULES_ID = ?", arrayOf(id.toString()))
         db.close()
     }
 
-    fun updateRule(id: Int, ruleName: String,ruleType: String) {
+    fun updateRule(id: Int?, ruleName: String?,ruleType: String?) {
+        Log.d("update rule", "${ruleName}")
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
             put(COLUMN_RULES_NAME, ruleName)

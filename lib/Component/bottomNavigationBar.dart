@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../screens/listRule.dart';
 import '../screens/historyTransition.dart';
 import '../screens/managerRule.dart';
+import '../screens/supportScreen.dart';
 class BottomNavigationBarExample extends StatefulWidget {
   const BottomNavigationBarExample({super.key});
 
@@ -19,10 +20,7 @@ class _BottomNavigationBarExampleState
     ListRule(),
     ManagerRule(),
     HistoryTransition(),
-    Text(
-      'Index 3: Settings',
-      style: optionStyle,
-    ),
+    SupportScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -48,22 +46,22 @@ class _BottomNavigationBarExampleState
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'Trang chủ',
-            backgroundColor: Colors.red,
+           backgroundColor: Color(0xFFc93131),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.rule),
             label: 'Quy tắc',
-            backgroundColor: Colors.red,
+           backgroundColor: Color(0xFFc93131),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.notifications),
             label: 'Giao dịch',
-            backgroundColor: Colors.red,
+           backgroundColor: Color(0xFFc93131),
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle),
             label: 'Hỗ trợ',
-            backgroundColor: Colors.red,
+           backgroundColor: Color(0xFFc93131),
           ),
         ],
         currentIndex: _selectedIndex,

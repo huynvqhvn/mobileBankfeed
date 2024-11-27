@@ -23,6 +23,8 @@ dependencies:
   loading_animation_widget: ^1.3.0
   page_transition: ^2.1.0
   flutter_launcher_icons: ^0.14.1
+  path_provider: ^2.1.5
+  url_launcher: ^6.3.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -33,8 +35,10 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: 
-    - assets/BankFeed.png
+  image_path: assets/play_store_512.png
+  min_sdk_android: 24
+  adaptive_icon_background: "#ffffff"
+  adaptive_icon_foreground: assets/play_store_512.png
 flutter:
   uses-material-design: true
   assets:

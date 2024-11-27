@@ -3,11 +3,12 @@ package com.example.bank_feed_vs1
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
-import androidx.core.content.ContextCompat
-import io.flutter.embedding.android.FlutterActivity
 import android.util.Log
-import io.flutter.plugin.common.MethodChannel
+import androidx.core.app.NotificationManagerCompat
 import com.google.gson.Gson
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.plugin.common.MethodChannel
+
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.example.yourapp/notifications"
     private val CHANNELCONNECTDATA = "com.bankfeed.app/data"
@@ -19,15 +20,35 @@ class MainActivity: FlutterActivity() {
         super.onCreate(savedInstanceState)
         val serviceIntent = Intent(this, MyForegroundService::class.java)
         flutterEngine?.dartExecutor?.binaryMessenger?.let {
-            MethodChannel(it, CHANNEL).setMethodCallHandler { call, result ->
+            MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
                 if (call.method == "openNotificationAccessSettings") {
-                    val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS)
-                    startActivity(intent)
-                    result.success(null)
+                    // Lấy `Context` từ `this` hoặc ép kiểu `it` về `Context`
+                    val context = this // Nếu trong Activity
+                    // val context = it as Context // Nếu `it` không được nhận diện tự động
+
+                    // Kiểm tra quyền đọc thông báo
+                    val enabledNotificationListeners = Settings.Secure.getString(context.contentResolver, "enabled_notification_listeners")
+                    val packageName = context.packageName
+
+                    if (enabledNotificationListeners != null && enabledNotificationListeners.contains(packageName)) {
+                        result.success("Permission already granted")
+                    } else {
+                        try {
+                            val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                            result.success("Opened settings for granting notification access")
+                        } catch (e: Exception) {
+                            result.error("ERROR", "Failed to open notification settings", e.message)
+                        }
+                    }
                 } else {
                     result.notImplemented()
                 }
             }
+
+
         }
         flutterEngine?.dartExecutor?.binaryMessenger?.let {
             MethodChannel(it, CHANNELCONNECTDATA).setMethodCallHandler { call, result ->
@@ -158,10 +179,19 @@ class MainActivity: FlutterActivity() {
                     }
                 }
                 else if(call.method == "updateRule"){
-
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val id = call.argument<Int>("id") // Nhận "ruleIn"
+                    val nameRule = call.argument<String>("ruleName");
+                    val typeRule = call.argument<String>("ruleType");
+                    Log.d("id", "id: ${id}");
+                    databaseHelper.updateRule(id,nameRule,typeRule);
+                    result.success("Dữ liệu đã được xử lý thành công!")
                 }
                 else if (call.method =="deleteRule"){
-
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val id = call.argument<Int>("ruleDelete") // Nhận "ruleIn"
+                    databaseHelper.deleteRule(id)
+                    result.success("Dữ liệu đã được xử lý thành công!")
                 }
                 else {
                     result.notImplemented()

@@ -94,7 +94,7 @@ class NativeDataChannel {
     if (rule.isNotEmpty) {
       try {
         await platformRule.invokeMethod('postRule', {
-          "ruleIn": rule,
+          "ruleIn": rule.trim(),
           "typeRule": typeRule,
         });
 
@@ -114,7 +114,7 @@ class NativeDataChannel {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
-            backgroundColor: Colors.red,
+            backgroundColor:  Color(0xFFc93131),
           ),
         );
 
@@ -125,7 +125,7 @@ class NativeDataChannel {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Không được để trống!'),
-          backgroundColor: Colors.red,
+          backgroundColor:  Color(0xFFc93131),
         ),
       );
       return false;
@@ -166,22 +166,71 @@ class NativeDataChannel {
     }
   }
 
-  static Future<bool> updateRuleDataBase(Rule ruleUpdate) async {
-    try {
-      await platformRule.invokeMethod("updateRule", {'ruleUpdate': ruleUpdate});
-      return true;
-    } catch (e) {
-      print("Lỗi không xác định: $e");
+  static Future<bool> updateRuleDataBase(
+      Rule ruleUpdate, BuildContext context) async {
+          print("Log message");
+    if (ruleUpdate.rulesName.isNotEmpty) {
+         print("Log message23");
+      try {
+        await platformRule.invokeMethod("updateRule", {
+          'id': ruleUpdate.id,
+          'ruleName': ruleUpdate.rulesName,
+          'ruleType': ruleUpdate.rulesType
+        });
+
+        print("Log message");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cập nhật quy tắc thành công!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        print("Lỗi không xác định: ${ Navigator.canPop(context)}");
+        // Quay lại và trả về `true` để biểu thị thành công
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, true);
+        }
+        return true;
+      } catch (e) {
+        print("Lỗi không xác định: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
+            backgroundColor: Color(0xFFc93131) ,
+          ),
+        );
+        return false;
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không được để trống!'),
+          backgroundColor:  Color(0xFFc93131),
+        ),
+      );
       return false;
     }
   }
 
-  static Future<bool> deleteRuleDataBase(int ruleId) async {
+  static Future<bool> deleteRuleDataBase(
+      int ruleId, BuildContext context) async {
     try {
       await platformRule.invokeMethod("deleteRule", {'ruleDelete': ruleId});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Xóa quy tắc thành công!'),
+          backgroundColor: Colors.green,
+        ),
+      );
       return true;
     } catch (e) {
       print("Lỗi không xác định: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Không được để trống!'),
+          backgroundColor:  Color(0xFFc93131),
+        ),
+      );
       return false;
     }
   }
