@@ -124,7 +124,7 @@ class NativeDataChannel {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không được để trống!'),
+          content: Text('Không được để trống người gửi!'),
           backgroundColor:  Color(0xFFc93131),
         ),
       );
@@ -204,7 +204,7 @@ class NativeDataChannel {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không được để trống!'),
+          content: Text('Không được để trống người gửi!'),
           backgroundColor:  Color(0xFFc93131),
         ),
       );
@@ -227,7 +227,7 @@ class NativeDataChannel {
       print("Lỗi không xác định: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không được để trống!'),
+          content: Text('Lỗi không xác định'),
           backgroundColor:  Color(0xFFc93131),
         ),
       );

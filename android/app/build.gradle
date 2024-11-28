@@ -75,6 +75,14 @@ android {
         implementation 'com.google.code.gson:gson:2.8.8'
 
     }
+    // Thay đổi tên file APK
+    applicationVariants.all { variant ->
+        variant.outputs.forEach { output ->
+            // Định dạng tên file APK mong muốn
+            def newName = "BankFeed.apk"
+            output.outputFileName = newName
+        }
+    }
 }
 
 flutter {

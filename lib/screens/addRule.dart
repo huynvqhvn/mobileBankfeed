@@ -68,7 +68,7 @@ class _AddRuleState extends State<Addrule> {
               SizedBox(height: 20),
 
               Text(
-                "Nhập từ khóa để ghi nhận thông tin:",
+                "Người gửi",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 10),
@@ -81,7 +81,17 @@ class _AddRuleState extends State<Addrule> {
                   hintText: "Người gửi",
                 ),
               ),
-
+              SizedBox(height: 20),
+              RichText(
+                text: TextSpan(children: [
+                  TextSpan(
+                      text:
+                          "! Quy tắc giúp bạn thiết lập và quyết định xem dữ liệu nào sẽ gửi lên hệ thống Bankfeeds HVN\n",
+                      style: TextStyle(
+                          color: Color(0xFFc93131),
+                          fontStyle: FontStyle.italic)),
+                ]),
+              ),
               SizedBox(height: 20),
 
               // Nút để thực hiện hành động khi đã nhập xong

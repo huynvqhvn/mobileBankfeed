@@ -29,12 +29,12 @@ class _ListRuleState extends State<ListRule> {
   bool statusScreen = false;
   final List<String> guideSteps = [
     "Bước 1: Mở ứng dụng.",
-    "Bước 2: Đăng nhập vào trang https://iddev.hvn.vn/",
-    "Bước 3: Vào dashboard của BankFeeds",
+    "Bước 2: Đăng nhập vào trang https://id.hvn.vn/",
+    "Bước 3: Vào Dashboard kéo xuống dưới và sao chép đường dẫn Webhooks (không chia sẻ cho bất kì ai khác)",
     "Bước 4: Copy link webhooks của bạn",
     "Bước 5: Trở về app BankFeeds và điền webhooks",
-    "Bước 6: Tạo các quy tắc nhận tin nhắn của bạn ở trên trang https://iddev.hvn.vn/",
-    "Bước 7: Tạo các quy tắc tương tự trên trang https://iddev.hvn.vn/ trên app điện thoại",
+    "Bước 6: Tạo các quy tắc nhận tin nhắn của bạn ở trên trang https://id.hvn.vn/",
+    "Bước 7: Tạo các quy tắc tương tự trên trang https://id.hvn.vn/ trên app điện thoại",
   ];
   @override
   void initState() {

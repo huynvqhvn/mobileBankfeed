@@ -107,7 +107,7 @@ class _ManagerRule extends State<ManagerRule> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Quy tắc nhận dữ liệu",
+                            "Quy tắc gửi",
                             style: TextStyle(
                                 color: Colors.black,
                                 fontWeight: FontWeight.bold,
@@ -117,6 +117,12 @@ class _ManagerRule extends State<ManagerRule> {
                     SizedBox(height: 10),
                     RichText(
                       text: TextSpan(children: [
+                        TextSpan(
+                            text:
+                                "! Quy tắc giúp bạn thiết lập và quyết định xem dữ liệu nào sẽ gửi lên hệ thống Bankfeeds HVN\n",
+                            style: TextStyle(
+                                color: Color(0xFFc93131),
+                                fontStyle: FontStyle.italic)),
                         TextSpan(
                             text:
                                 "! Nếu bạn muốn cập nhật quy tắc hãy ấn vào quy tắc đó\n",
