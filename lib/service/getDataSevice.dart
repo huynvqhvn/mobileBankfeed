@@ -89,12 +89,12 @@ class NativeDataChannel {
     }
   }
 
-  static Future<bool> postRule(
-      String rule, String typeRule, BuildContext context) async {
-    if (rule.isNotEmpty) {
+  static Future<bool> postRule(String rule, String typeRule, BuildContext context) async {
+        print("rule name: ${rule}");
+    if (rule != '') {
       try {
         await platformRule.invokeMethod('postRule', {
-          "ruleIn": rule.trim(),
+          "ruleIn": rule,
           "typeRule": typeRule,
         });
 
@@ -124,7 +124,7 @@ class NativeDataChannel {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không được để trống người gửi!'),
+          content: Text('Không được để trống ngân hàng!'),
           backgroundColor:  Color(0xFFc93131),
         ),
       );
@@ -169,7 +169,7 @@ class NativeDataChannel {
   static Future<bool> updateRuleDataBase(
       Rule ruleUpdate, BuildContext context) async {
           print("Log message");
-    if (ruleUpdate.rulesName.isNotEmpty) {
+    if (ruleUpdate.rulesName != '') {
          print("Log message23");
       try {
         await platformRule.invokeMethod("updateRule", {
@@ -204,7 +204,7 @@ class NativeDataChannel {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Không được để trống người gửi!'),
+          content: Text('Không được để trống ngân hàng'),
           backgroundColor:  Color(0xFFc93131),
         ),
       );

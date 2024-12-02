@@ -1,6 +1,10 @@
+import 'package:bank_feed_vs1/model/bankList.dart';
 import 'package:flutter/material.dart';
 import '../model/ruleModel.dart';
 import '../service/getDataSevice.dart';
+import 'SelectionBankScreen.dart';
+import '../service/connectBe.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 class Updaterule extends StatefulWidget {
   final Rule rule;
@@ -12,20 +16,47 @@ class Updaterule extends StatefulWidget {
 
 class _UpdateruleState extends State<Updaterule> {
   // Biến để lưu lựa chọn của dropdown
-  String _selectedOption = 'sms';
-  late TextEditingController _keySearchController = TextEditingController();
+  bool statusScreen = false;
+  late String _selectedOptionType = widget.rule.rulesType;
+  late String _selectedBankShortName = '';
+  late String _selectedBankName = '';
+  late String url_logo_Bank = "";
 
   @override
   void initState() {
     super.initState();
-    // Khởi tạo controller với giá trị mặc định
-    _keySearchController = TextEditingController(text: widget.rule.rulesName);
+    initPlatformState();
   }
 
   @override
   void dispose() {
-    _keySearchController.dispose(); // Giải phóng bộ nhớ khi không cần
     super.dispose();
+  }
+
+  // Function setup for Screen
+  Future<void> initPlatformState() async {
+    BankModel? selectedBank =
+        await ConnectToBe.getBankModelWithShortName(widget.rule.rulesName);
+
+    try {
+      //check selectedBank null or not and check widget created or not
+      if (mounted && selectedBank != null) {
+        setState(() {
+          _selectedBankShortName = selectedBank.shortName;
+          _selectedBankName = selectedBank.bankName;
+          url_logo_Bank = selectedBank.logo;
+          statusScreen =
+              true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+        });
+      } else {
+        setState(() {
+          statusScreen =
+              true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+        });
+      }
+    } catch (e) {
+      print("Có lỗi xảy ra: $e");
+    }
   }
 
   @override
@@ -42,86 +73,178 @@ class _UpdateruleState extends State<Updaterule> {
         color: Theme.of(context).colorScheme.background,
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Cập Nhật Quy Tắc",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-              Text(
-                "Chọn loại:",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-
-              // Dropdown chọn giữa "sms" và "app"
-              DropdownButtonFormField<String>(
-                value: widget.rule.rulesType,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                ),
-                items: <String>['sms']
-                    .map((String value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        ))
-                    .toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedOption = newValue!;
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-
-              Text(
-                "Người gửi",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 10),
-
-              // TextField để nhập key search
-              TextField(
-                controller: _keySearchController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: widget.rule.rulesName,
-                ),
-              ),
-              SizedBox(height: 20),
-              RichText(
-                text: TextSpan(children: [
-                  TextSpan(
-                      text:
-                          "! Quy tắc giúp bạn thiết lập và quyết định xem dữ liệu nào sẽ gửi lên hệ thống Bankfeeds HVN\n",
-                      style: TextStyle(
-                          color: Color(0xFFc93131),
-                          fontStyle: FontStyle.italic)),
-                ]),
-              ),
-              SizedBox(height: 20),
-              // Nút để thực hiện hành động khi đã nhập xong
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Rule newRule = new Rule(
-                        id: widget.rule.id,
-                        rulesName: _keySearchController.text,
-                        rulesType: _selectedOption);
-                    NativeDataChannel.updateRuleDataBase(newRule, context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFc93131),
+          child: !statusScreen
+              ? Align(
+                  alignment: Alignment.center,
+                  child: LoadingAnimationWidget.staggeredDotsWave(
+                    color: Color(0xFFc93131),
+                    size: 50,
                   ),
-                  child: Text('Cập nhật quy tắc',
-                      style: TextStyle(color: Colors.white)),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Thêm Quy Tắc",
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      "Chọn loại:",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    // Dropdown chọn giữa "sms" và "app"
+                    Row(children: [
+                      Expanded(
+                          child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5), // Bo góc
+                          side: BorderSide(
+                            color: Colors.grey, // Màu viền
+                            width: 1.5, // Độ dày viền
+                          ),
+                        ),
+                        color: Colors.white,
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedOptionType,
+                          decoration: InputDecoration(
+                            contentPadding:
+                                EdgeInsets.symmetric(horizontal: 12),
+                            border: InputBorder.none,
+                          ),
+                          items: <String>['sms', 'app']
+                              .map((String value) => DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value),
+                                  ))
+                              .toList(),
+                          onChanged: (newValue) {
+                            setState(() {
+                              _selectedOptionType = newValue!;
+                            });
+                          },
+                        ),
+                      ))
+                    ]),
+                    SizedBox(height: 20),
+
+                    Text(
+                      "Ngân hàng",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: () async {
+                        // Chuyển đến màn hình lựa chọn và chờ kết quả
+                        final result = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => SelectionBankScreen()),
+                        );
+
+                        // Cập nhật giá trị nếu có kết quả trả về
+                        if (result != null) {
+                          setState(() {
+                            _selectedBankShortName = result[2];
+                            _selectedBankName = result[1];
+                          });
+                          setState(() {
+                            url_logo_Bank = result[0];
+                          });
+                        }
+                      },
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child: Card(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5), // Bo góc
+                              side: BorderSide(
+                                color: Colors.grey, // Màu viền
+                                width: 1.5, // Độ dày viền
+                              ),
+                            ),
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Row(
+                                children: [
+                                  url_logo_Bank != ""
+                                      ? Image.network(
+                                          url_logo_Bank, // Thay đổi URL này thành URL hình ảnh thực tế
+                                          width: 60, // Chiều rộng hình vuông
+                                          height: 50, // Chiều cao hình vuông
+                                          fit: BoxFit
+                                              .contain, // Cách hiển thị hình
+                                        )
+                                      : Icon(
+                                          Icons
+                                              .credit_card, // Biểu tượng bạn muốn thêm
+                                          color: Colors
+                                              .black, // Màu của biểu tượng
+                                        ),
+                                  SizedBox(width: 20),
+                                  Expanded(
+                                    child: Text(
+                                      _selectedBankName != ""
+                                          ? _selectedBankName +
+                                              " " +
+                                              "(" +
+                                              _selectedBankShortName +
+                                              ")"
+                                          : 'Chọn ngân hàng',
+                                      style: TextStyle(fontSize: 16),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons
+                                        .arrow_right, // Biểu tượng bạn muốn thêm
+                                    color: Colors.black, // Màu của biểu tượng
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ))
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    RichText(
+                      text: TextSpan(children: [
+                        TextSpan(
+                            text:
+                                "! Quy tắc giúp bạn thiết lập và quyết định xem dữ liệu nào sẽ gửi lên hệ thống Bankfeeds HVN\n",
+                            style: TextStyle(
+                                color: Color(0xFFc93131),
+                                fontStyle: FontStyle.italic)),
+                      ]),
+                    ),
+                    SizedBox(height: 20),
+
+                    // Nút để thực hiện hành động khi đã nhập xong
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Rule ruleUpdate = new Rule(
+                              id: widget.rule.id,
+                              rulesName: _selectedBankShortName,
+                              rulesType: _selectedOptionType);
+                          NativeDataChannel.updateRuleDataBase(
+                              ruleUpdate, context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFFc93131),
+                        ),
+                        child: Text('Cập nhật quy tắc',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
-          ),
         ),
       ),
     );

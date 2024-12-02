@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../model/ruleModel.dart';
 import '../service/getDataSevice.dart';
+import 'SelectionBankScreen.dart';
 
 class Addrule extends StatefulWidget {
   @override
@@ -9,12 +10,12 @@ class Addrule extends StatefulWidget {
 
 class _AddRuleState extends State<Addrule> {
   // Biến để lưu lựa chọn của dropdown
-  String _selectedOption = 'sms';
-  final TextEditingController _keySearchController = TextEditingController();
-
+  String _selectedOptionType = 'sms';
+  String _selectedBankShortName = '';
+  String _selectedBankName = '';
+  late String url_logo_Bank = "";
   @override
   void dispose() {
-    _keySearchController.dispose(); // Giải phóng bộ nhớ khi không cần
     super.dispose();
   }
 
@@ -45,40 +46,115 @@ class _AddRuleState extends State<Addrule> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 10),
-
               // Dropdown chọn giữa "sms" và "app"
-              DropdownButtonFormField<String>(
-                value: _selectedOption,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                ),
-                items: <String>['sms']
-                    .map((String value) => DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        ))
-                    .toList(),
-                onChanged: (newValue) {
-                  setState(() {
-                    _selectedOption = newValue!;
-                  });
-                },
-              ),
+              Row(children: [
+                Expanded(
+                    child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5), // Bo góc
+                    side: BorderSide(
+                      color: Colors.grey, // Màu viền
+                      width: 1.5, // Độ dày viền
+                    ),
+                  ),
+                  color: Colors.white,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedOptionType,
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                      border: InputBorder.none,
+                    ),
+                    items: <String>['sms', 'app']
+                        .map((String value) => DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            ))
+                        .toList(),
+                    onChanged: (newValue) {
+                      setState(() {
+                        _selectedOptionType = newValue!;
+                      });
+                    },
+                  ),
+                ))
+              ]),
               SizedBox(height: 20),
 
               Text(
-                "Người gửi",
+                "Ngân hàng",
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
               SizedBox(height: 10),
+              GestureDetector(
+                onTap: () async {
+                  // Chuyển đến màn hình lựa chọn và chờ kết quả
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => SelectionBankScreen()),
+                  );
 
-              // TextField để nhập key search
-              TextField(
-                controller: _keySearchController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Người gửi",
+                  // Cập nhật giá trị nếu có kết quả trả về
+                  if (result != null) {
+                    setState(() {
+                      _selectedBankShortName = result[2];
+                      _selectedBankName = result[1];
+                    });
+                    setState(() {
+                      url_logo_Bank = result[0];
+                    });
+                  }
+                },
+                child: Row(
+                  children: [
+                    Expanded(
+                        child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(5), // Bo góc
+                        side: BorderSide(
+                          color: Colors.grey, // Màu viền
+                          width: 1.5, // Độ dày viền
+                        ),
+                      ),
+                      color: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            url_logo_Bank != ""
+                                ? Image.network(
+                                    url_logo_Bank, // Thay đổi URL này thành URL hình ảnh thực tế
+                                    width: 60, // Chiều rộng hình vuông
+                                    height: 50, // Chiều cao hình vuông
+                                    fit: BoxFit.contain, // Cách hiển thị hình
+                                  )
+                                : Icon(
+                                    Icons
+                                        .credit_card, // Biểu tượng bạn muốn thêm
+                                    color: Colors.black, // Màu của biểu tượng
+                                  ),
+                            SizedBox(width: 20),
+                            Expanded(
+                              child: Text(
+                                _selectedBankName != ""
+                                    ? _selectedBankName +
+                                        " " +
+                                        "(" +
+                                        _selectedBankShortName +
+                                        ")"
+                                    : 'Chọn ngân hàng',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_right, // Biểu tượng bạn muốn thêm
+                              color: Colors.black, // Màu của biểu tượng
+                            ),
+                          ],
+                        ),
+                      ),
+                    ))
+                  ],
                 ),
               ),
               SizedBox(height: 20),
@@ -99,8 +175,8 @@ class _AddRuleState extends State<Addrule> {
                 child: ElevatedButton(
                   onPressed: () {
                     NativeDataChannel.postRule(
-                      _keySearchController.text,
-                      _selectedOption,
+                      _selectedBankShortName,
+                      _selectedOptionType,
                       context,
                     );
                   },
