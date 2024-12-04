@@ -113,7 +113,7 @@ class NativeDataChannel {
         print("Lỗi khi gửi dữ liệu: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
+            content: Text('Có lỗi xảy ra, vui lòng thử lại! $e'),
             backgroundColor:  Color(0xFFc93131),
           ),
         );
@@ -173,7 +173,7 @@ class NativeDataChannel {
          print("Log message23");
       try {
         await platformRule.invokeMethod("updateRule", {
-          'id': ruleUpdate.id,
+          'id': ruleUpdate.typeId,
           'ruleName': ruleUpdate.rulesName,
           'ruleType': ruleUpdate.rulesType
         });

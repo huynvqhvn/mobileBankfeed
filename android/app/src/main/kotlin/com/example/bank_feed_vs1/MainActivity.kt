@@ -18,6 +18,8 @@ class MainActivity: FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val databaseHelper = DatabaseHelper(applicationContext);
+        databaseHelper.initializeData();
         val serviceIntent = Intent(this, MyForegroundService::class.java)
         flutterEngine?.dartExecutor?.binaryMessenger?.let {
             MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
@@ -158,8 +160,9 @@ class MainActivity: FlutterActivity() {
 
                     if (rule != null && typeRule != null) {
                         val databaseHelper = DatabaseHelper(applicationContext)
-                        databaseHelper.addRule(rule,typeRule);
-
+                        val checkdata  = databaseHelper.getRule(rule,typeRule);
+                        databaseHelper.updateRuleTypeSelected(checkdata!!.typeID,true);
+                        Log.d("checkdata", "onCreate: ${checkdata}");
                         // Thực hiện logic xử lý dữ liệu ở đây (lưu vào CSDL, xử lý logic, v.v.)
                         result.success("Dữ liệu đã được xử lý thành công!")
                     } else {
@@ -168,7 +171,7 @@ class MainActivity: FlutterActivity() {
                 }
                 else if (call.method == "getRule"){
                     val databaseHelper = DatabaseHelper(applicationContext)
-                    val dataReturn = databaseHelper.getAllRules();
+                    val dataReturn = databaseHelper.getAllRulesSelected();
                     if(!dataReturn.isNullOrEmpty()){
                         val jsonMessages = Gson().toJson(dataReturn)
                         result.success(jsonMessages ?: "[]")
@@ -184,13 +187,15 @@ class MainActivity: FlutterActivity() {
                     val nameRule = call.argument<String>("ruleName");
                     val typeRule = call.argument<String>("ruleType");
                     Log.d("id", "id: ${id}");
-                    databaseHelper.updateRule(id,nameRule,typeRule);
+                    databaseHelper.updateRuleTypeSelected(id,false);
+                    val checkdata  = databaseHelper.getRule(nameRule,typeRule);
+                    databaseHelper.updateRuleTypeSelected(checkdata!!.typeID,true);
                     result.success("Dữ liệu đã được xử lý thành công!")
                 }
                 else if (call.method =="deleteRule"){
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val id = call.argument<Int>("ruleDelete") // Nhận "ruleIn"
-                    databaseHelper.deleteRule(id)
+                    databaseHelper.updateRuleTypeSelected(id,false);
                     result.success("Dữ liệu đã được xử lý thành công!")
                 }
                 else {

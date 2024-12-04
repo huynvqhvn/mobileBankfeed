@@ -180,7 +180,7 @@ class _ManagerRule extends State<ManagerRule> {
                               },
                               onDismissed: (direction) async {
                                 await NativeDataChannel.deleteRuleDataBase(
-                                    item.id, context);
+                                    item.typeId, context);
                               },
                               child: GestureDetector(
                                   onTap: () async {

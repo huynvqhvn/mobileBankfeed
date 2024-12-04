@@ -40,35 +40,35 @@ class SmsWorker(context: Context, params: WorkerParameters) : Worker(context, pa
         val serialNumber =  getDataFromFlutterSharedPreferences(applicationContext,"Service ID");
         val connectApi = setupApiService(applicationContext)
         val webhook = databaseHelper.getWebhooks()
-        val getRules = databaseHelper.getAllRules();
+        val getRules = databaseHelper.getAllRulesSelected();
         for (Rule in getRules ){
-            if(Rule.typeRule.equals("sms") && sender != null && message !=null && webhook.isNotEmpty()){
+            if(Rule.typesName.equals("sms") && sender != null && message !=null && webhook.isNotEmpty()){
                 Log.d("SmsWorker","passpass");
-                    if(Rule.rule.toLowerCase().equals(sender.toLowerCase())){
+                    if(Rule.typesContent.toLowerCase().equals(sender.toLowerCase())){
                         if (isNetworkAvailable(applicationContext)) {
                             Log.d("SmsWorker","passpass wifi");
-                            var sms = NotificationModel("${sender}", "${message}",timestamp,serialNumber,"sms");
+                            var sms = NotificationModel("${Rule.rule}", "${message}",timestamp,serialNumber,"sms");
                             Log.d("timestamp12345", "${sms}")
                             connectApi?.sendNotification(webhook.get(0).webhookEndPoint, sms)!!.enqueue(object : Callback<Void> {
                                 override fun onResponse(call: Call<Void>, response: Response<Void>) {
                                     if (response.isSuccessful) {
                                         println("Log sent sms successfully")
-                                        databaseHelper.addMessage(sender, message, serialNumber,true,timestamp,"sms");
+                                        databaseHelper.addMessage(Rule.rule, message, serialNumber,true,timestamp,"sms");
                                     } else {
                                         println("Failed to send log: ${response.code()}")
-                                        databaseHelper.addMessage(sender, message, serialNumber,false,timestamp,"sms");
+                                        databaseHelper.addMessage(Rule.rule, message, serialNumber,false,timestamp,"sms");
                                     }
                                 }
 
                                 override fun onFailure(call: Call<Void>, t: Throwable) {
                                     println("Error sending log: ${t.message}")
-                                    databaseHelper.addMessage(sender, message, serialNumber,false,timestamp,"sms");
+                                    databaseHelper.addMessage(Rule.rule, message, serialNumber,false,timestamp,"sms");
                                 }
                             })
                         }
                         else {
                             Log.d("SmsWorker","not pass wifi");
-                            databaseHelper.addMessage(sender, message, serialNumber,false,timestamp,"sms");
+                            databaseHelper.addMessage(Rule.rule, message, serialNumber,false,timestamp,"sms");
                         }
 
                     }

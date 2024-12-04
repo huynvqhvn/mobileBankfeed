@@ -29,8 +29,13 @@ private const val COLUMN_TYPE = "type"
 private const val TABLE_RULES = "rules"
 private const val COLUMN_RULES_ID = "rulesID"
 private const val COLUMN_RULES_NAME = "rulesName"
-private const val COLUMN_RULES_TYPE = "ruleType"
-
+// Định nghĩa bảng mới và các type
+private const val TABLE_TYPES = "types"
+private const val COLUMN_TYPES_ID = "typesID"
+private const val COLUMN_TYPES_NAME = "typesName"
+private const val COLUMN_TYPES_CONTENT = "typesContent"
+private const val COLUMN_RULE_ID = "ruleID"
+private const val COLUMN_RULE_TYPE_IS_SELECTED = "ruleTypeSelected"
 //
 private const val TABLE_WEBHOOKS = "webhooks"
 private const val COLUMN_WEBHOOKS_ID = "webhooksID"
@@ -53,10 +58,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
         val createTableRules = ("CREATE TABLE " + TABLE_RULES + "("
                 + COLUMN_RULES_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_RULES_NAME + " TEXT,"
-                + COLUMN_RULES_TYPE + " TEXT"
+                + COLUMN_RULES_NAME + " TEXT "
                 + ")")
-
+        val createTableTypes = ("CREATE TABLE " + TABLE_TYPES + "("
+                + COLUMN_TYPES_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COLUMN_TYPES_NAME + " TEXT, "
+                + COLUMN_TYPES_CONTENT + " TEXT, "
+                + COLUMN_RULE_ID + " INTEGER, "
+                + COLUMN_RULE_TYPE_IS_SELECTED + " INTEGER DEFAULT 0, " // Đảm bảo có dấu phẩy ở đây
+                + "FOREIGN KEY(" + COLUMN_RULE_ID + ") REFERENCES " + TABLE_RULES + "(id) ON DELETE CASCADE"
+                + ")")
         val createTableWebHooks = ("CREATE TABLE " + TABLE_WEBHOOKS + "("
                 + COLUMN_WEBHOOKS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COLUMN_WEBHOOKS_BASE + " TEXT, "
@@ -66,6 +77,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
         db.execSQL(createTableMessages)
         db.execSQL(createTableRules)
+        db.execSQL(createTableTypes)
         db.execSQL(createTableWebHooks)
     }
 
@@ -304,12 +316,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("DELETE FROM $TABLE_MESSAGES WHERE $COLUMN_ID = ?", arrayOf(id))
         db.close()
     }
-
-    fun addRule(ruleName:String?,ruleType: String? ):Long{
+    /* Thêm rule vào database
+    * ruleName: data tên quy tắc thêm vào
+    * */
+    fun addRule (ruleName:String?):Long{
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
-            put(COLUMN_RULES_NAME, ruleName)
-            put(COLUMN_RULES_TYPE, ruleType)
+            put(COLUMN_RULES_NAME, ruleName);
         }
 
         return try {
@@ -322,45 +335,282 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             db.close() // Đảm bảo đóng db dù có lỗi hay không
         }
     }
+    /* Lấy Danh sách các quy tắc trong database
+    *  Trả về danh sách quy tắc
+    * */
+    fun getAllRules(): List<RuleType> {
+        val messageList = mutableListOf<RuleType>()
 
-    fun getAllRules(): List<Rule> {
-        val messageList = mutableListOf<Rule>()
-        val selectQuery = "SELECT * FROM $TABLE_RULES ORDER BY $COLUMN_RULES_ID DESC"
+        val selectQuery = """
+        SELECT TR.*, TT.* 
+        FROM $TABLE_RULES TR 
+        LEFT JOIN $TABLE_TYPES TT 
+        ON TR.$COLUMN_RULES_ID = TT.$COLUMN_RULE_ID
+        ORDER BY TR.$COLUMN_RULES_ID DESC
+    """
+
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null);
+
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    // Kiểm tra sự tồn tại của cột trước khi lấy giá trị
+                    val ruleType = RuleType(
+                        id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RULES_ID)),
+                        rule = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RULES_NAME)),
+                        typeID = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TYPES_ID)),
+                        typesName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPES_NAME)),
+                        typesContent = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPES_CONTENT))
+                    )
+                    messageList.add(ruleType)
+                } while (cursor.moveToNext())
+            }
+        } finally {
+            cursor.close()
+            db.close()
+        }
+
+        return messageList
+    }
+    /* Lấy Danh sách các quy tắc trong database
+*  Trả về danh sách quy tắc
+* */
+    fun getAllRulesSelected(): List<RuleType> {
+        val messageList = mutableListOf<RuleType>()
+
+        val selectQuery = """
+        SELECT TR.*, TT.* 
+        FROM $TABLE_RULES TR 
+        LEFT JOIN $TABLE_TYPES TT 
+        ON TR.$COLUMN_RULES_ID = TT.$COLUMN_RULE_ID
+         WHERE TT.$COLUMN_RULE_TYPE_IS_SELECTED = ?
+        ORDER BY TR.$COLUMN_RULES_ID DESC
+    """
+
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf("1"))
+
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    // Kiểm tra sự tồn tại của cột trước khi lấy giá trị
+                    val ruleType = RuleType(
+                        id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RULES_ID)),
+                        rule = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RULES_NAME)),
+                        typeID = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TYPES_ID)),
+                        typesName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPES_NAME)),
+                        typesContent = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPES_CONTENT))
+                    )
+                    messageList.add(ruleType)
+                } while (cursor.moveToNext())
+            }
+        } finally {
+            cursor.close()
+            db.close()
+        }
+
+        return messageList
+    }
+    /* Lấy id mới nhất trong bảng rule
+    *  trả về số id mới nhắt
+    * */
+    fun getNewRuleId(): Int {
+        var ruleId = 0 // Khởi tạo biến ruleId
+        val selectQuery = "SELECT * FROM $TABLE_RULES ORDER BY $COLUMN_RULES_ID DESC LIMIT 1" // Lấy bản ghi đầu tiên
+
         val db = this.readableDatabase
         val cursor = db.rawQuery(selectQuery, null)
 
         if (cursor.moveToFirst()) {
-            do {
-                val Rule = Rule(
-                    id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RULES_ID
-                    )),
-                    rule = cursor.getString(cursor.getColumnIndexOrThrow( COLUMN_RULES_NAME )),
-                    typeRule= cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RULES_TYPE))
-                )
-                messageList.add(Rule)
-            } while (cursor.moveToNext())
+            ruleId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RULES_ID)) // Lấy ID
         }
 
-        cursor.close()
-        db.close()
-        return messageList
+        cursor.close() // Đóng cursor
+        db.close() // Đóng cơ sở dữ liệu
+        return ruleId // Trả về ID
     }
 
+    /* Lấy quy tắc theo tên và theo kiểu của quy tắc
+    *  ruleName: tên quy tắc
+    *  typeName: tên kiểu quy tắc
+    * */
+    fun getRule(ruleName: String?, typeName: String?): RuleType? {
+        // Kiểm tra tham số null
+        if (ruleName.isNullOrBlank() || typeName.isNullOrBlank()) {
+            return null
+        }
+
+        val selectQuery = """
+        SELECT TR.*, TT.* 
+        FROM $TABLE_RULES TR 
+        LEFT JOIN $TABLE_TYPES TT 
+        ON TR.$COLUMN_RULES_ID = TT.$COLUMN_RULE_ID
+        WHERE TR.$COLUMN_RULES_NAME = ? AND TT.$COLUMN_TYPES_NAME = ?
+        ORDER BY TR.$COLUMN_RULES_ID DESC
+    """
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf(ruleName, typeName))
+
+        var ruleType: RuleType? = null
+
+        try {
+            if (cursor.moveToFirst()) {
+                // Chỉ lấy bản ghi đầu tiên
+                ruleType = RuleType(
+                    id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RULES_ID)),
+                    rule = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RULES_NAME)),
+                    typeID = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TYPES_ID)),
+                    typesName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPES_NAME)),
+                    typesContent = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPES_CONTENT))
+                )
+            }
+        } finally {
+            cursor.close()
+            db.close()
+        }
+
+        return ruleType
+    }
+    /* Lấy quy tắc theo id của quy tắc đó
+   *  typeId : id của type đang được kích hoạt
+   * */
+    fun getRuleWithId(typeId: Int?): RuleType? {
+
+        val selectQuery = """
+        SELECT TR.*, TT.* 
+        FROM $TABLE_RULES TR 
+        LEFT JOIN $TABLE_TYPES TT 
+        ON TR.$COLUMN_RULES_ID = TT.$COLUMN_RULE_ID
+        WHERE TT.$COLUMN_TYPES_ID = ?
+        ORDER BY TR.$COLUMN_RULES_ID DESC
+    """
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf(typeId?.toString()))
+
+        var ruleType: RuleType? = null
+
+        try {
+            if (cursor.moveToFirst()) {
+                // Chỉ lấy bản ghi đầu tiên
+                ruleType = RuleType(
+                    id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RULES_ID)),
+                    rule = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_RULES_NAME)),
+                    typeID = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_TYPES_ID)),
+                    typesName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPES_NAME)),
+                    typesContent = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TYPES_CONTENT))
+                )
+            }
+        } finally {
+            cursor.close()
+            db.close()
+        }
+
+        return ruleType
+    }
+    /* Thêm tpye của các quy tắc
+    * typeName : tên của tpye
+    * typeContent: nội dung của type
+    * ruleID : sô id rule của type đó
+    * */
+    fun addNewType(typeName:String?,typeContent:String?,ruleID:Int?): Long {
+        val db = this.writableDatabase
+        val contentValues = ContentValues().apply {
+            put(COLUMN_TYPES_NAME, typeName);
+            put(COLUMN_TYPES_CONTENT,typeContent);
+            put(COLUMN_RULE_ID,ruleID);
+        }
+
+        return try {
+            val result = db.insert(TABLE_TYPES, null, contentValues)
+            return result // Trả về kết quả chèn
+        } catch (e: Exception) {
+            Log.e("DatabaseError", "Lỗi khi chèn dữ liệu: ${e.message}")
+            return -1 // Trả về -1 để báo lỗi khi chèn thất bại
+        } finally {
+            db.close() // Đảm bảo đóng db dù có lỗi hay không
+        }
+    }
+    /* Cập nhật type của các quy tắc
+    * typeID: id của type
+    * typeName: tên của type
+    * typeContent: nội dung của type
+    */
+    fun updateType(typeName: String?, typeContent: String?, typeID: Int?) {
+        // Kiểm tra xem typeID có null hay không
+        if (typeID == null) {
+            throw IllegalArgumentException("typeID không được null")
+        }
+
+        val db = this.writableDatabase
+        val contentValues = ContentValues().apply {
+            put(COLUMN_TYPES_NAME, typeName)
+            put(COLUMN_TYPES_CONTENT, typeContent)
+        }
+
+        // Cập nhật bản ghi trong bảng Types
+        val rowsAffected = db.update(
+            TABLE_TYPES,
+            contentValues,
+            "$COLUMN_TYPES_ID = ?",
+            arrayOf(typeID.toString())
+        )
+
+        // Kiểm tra xem có bản ghi nào được cập nhật không
+        if (rowsAffected == 0) {
+            // Có thể ném ra một ngoại lệ hoặc log thông báo nếu không tìm thấy bản ghi để cập nhật
+            throw Exception("Không tìm thấy bản ghi với typeID: $typeID")
+        }
+
+        db.close() // Đóng cơ sở dữ liệu
+    }
     fun deleteRule(id: Int?) {
         val db = this.writableDatabase
         db.execSQL("DELETE FROM $TABLE_RULES WHERE $COLUMN_RULES_ID = ?", arrayOf(id.toString()))
         db.close()
     }
 
-    fun updateRule(id: Int?, ruleName: String?,ruleType: String?) {
-        Log.d("update rule", "${ruleName}")
+    /* Update Rule Selected
+    * typeID: Id type to selected
+    * ruleTypeSelected: status selected true or false
+    */
+    fun updateRuleTypeSelected(typeID: Int?, ruleTypeSelected: Boolean?) {
+        // Kiểm tra typeID và ruleTypeSelected có null hay không
+        if (typeID == null) {
+            throw IllegalArgumentException("typeID không được null")
+        }
+
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
-            put(COLUMN_RULES_NAME, ruleName)
-            put(COLUMN_RULES_TYPE, ruleType)
+            put(COLUMN_RULE_TYPE_IS_SELECTED, if (ruleTypeSelected == true) 1 else 0) // Dùng if-else để xác định giá trị
         }
-        db.update(TABLE_RULES, contentValues, "$COLUMN_RULES_ID = ?", arrayOf(id.toString()))
-        db.close()
+
+        // Cập nhật bản ghi trong bảng Types
+        val rowsAffected = db.update(
+            TABLE_TYPES,
+            contentValues,
+            "$COLUMN_TYPES_ID = ?", // Đảm bảo sử dụng COLUMN_TYPES_ID thay vì COLUMN_RULES_ID
+            arrayOf(typeID.toString())
+        )
+
+        // Kiểm tra xem có bản ghi nào được cập nhật hay không
+        if (rowsAffected == 0) {
+            throw Exception("Không tìm thấy bản ghi với typeID: $typeID")
+        }
+        db.close() // Đóng cơ sở dữ liệu
+    }
+    /* Khởi tạo data khi người dùng truy cập lần đầu
+    * */
+    fun initializeData() {
+        val ruleTypeList = getAllRules();
+        // check database rule exit
+        if(ruleTypeList.isEmpty()){
+            Log.d("checkdataExit", "initializeData: ${ruleTypeList}")
+            addRule("BIDV");
+            val ruleId = getNewRuleId();
+            addNewType("sms","BIDV",ruleId);
+            addNewType("app","com.vnpay.bidv",ruleId);
+        }
     }
 }
 
@@ -375,11 +625,13 @@ data class Message(
     val type: String,
 )
 
-data class Rule(
+data class RuleType(
     val id: Int,
     val rule: String,
-    val typeRule: String
-)
+    val typeID: Int,
+    val typesName:String,
+    val typesContent: String,
+);
 
 data class WebHook(
     val id: Int,

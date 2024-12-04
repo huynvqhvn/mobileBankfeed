@@ -232,7 +232,9 @@ class _UpdateruleState extends State<Updaterule> {
                           Rule ruleUpdate = new Rule(
                               id: widget.rule.id,
                               rulesName: _selectedBankShortName,
-                              rulesType: _selectedOptionType);
+                              rulesType: _selectedOptionType,
+                              typeContent: widget.rule.typeContent,
+                              typeId: widget.rule.typeId);
                           NativeDataChannel.updateRuleDataBase(
                               ruleUpdate, context);
                         },
