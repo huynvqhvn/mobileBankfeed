@@ -198,6 +198,18 @@ class MainActivity: FlutterActivity() {
                     databaseHelper.updateRuleTypeSelected(id,false);
                     result.success("Dữ liệu đã được xử lý thành công!")
                 }
+                else if (call.method == "getAllRules"){
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val dataReturn = databaseHelper.getAllRules();
+                    if(!dataReturn.isNullOrEmpty()){
+                        val jsonMessages = Gson().toJson(dataReturn)
+                        result.success(jsonMessages ?: "[]")
+                    }
+                    else {
+                        // Trả về giá trị mặc định nếu danh sách rỗng
+                        result.success("[]")
+                    }
+                }
                 else {
                     result.notImplemented()
                 }

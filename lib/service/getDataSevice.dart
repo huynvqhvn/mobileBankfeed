@@ -113,7 +113,7 @@ class NativeDataChannel {
         print("Lỗi khi gửi dữ liệu: $e");
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Có lỗi xảy ra, vui lòng thử lại! $e'),
+            content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
             backgroundColor:  Color(0xFFc93131),
           ),
         );
@@ -232,6 +232,25 @@ class NativeDataChannel {
         ),
       );
       return false;
+    }
+  }
+
+/**
+ * getAllRules() lấy hết các rule từ databases
+ * &
+ * Trả về danh sách các rule
+ *  */
+static Future<List<Rule>> getAllRules() async {
+    try {
+      String jsonData = await platformRule.invokeMethod('getAllRules');
+      print("jsonData2: $jsonData");
+      List<dynamic> jsonList = json.decode(jsonData);
+      print("jsonData2ab: $jsonData");
+      List<Rule> smsList = jsonList.map((item) => Rule.fromJson(item)).toList();
+      return smsList;
+    } catch (e) {
+      print("Lỗi khi gửi dữ liệuae2: $e");
+      return [];
     }
   }
 }

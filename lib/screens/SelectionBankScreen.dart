@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import '../service/connectBe.dart';
 import '../model/bankList.dart';
+import '../model/ruleModel.dart';
+import '../service/getDataSevice.dart';
 
 class SelectionBankScreen extends StatefulWidget {
   @override
@@ -12,6 +14,7 @@ class _SelectionBankScreen extends State<SelectionBankScreen> {
   bool statusScreen = false;
   late List<BankModel> listBanks = [];
   late List<BankModel> listBanksSave = [];
+  late List<Rule> listRules = [];
   final TextEditingController _keySearchController = TextEditingController();
   @override
   void initState() {
@@ -31,6 +34,16 @@ class _SelectionBankScreen extends State<SelectionBankScreen> {
     await Future.delayed(Duration(seconds: 2));
     listBanks = await ConnectToBe.getBankModelList();
     listBanksSave = listBanks;
+    listRules = await NativeDataChannel.getAllRules();
+    if (listRules.length > 0) {
+      for (int i = 0; i < listRules.length; i++) {
+        for (int j = 0; j < listBanks.length; j++) {
+          if(listRules[i].rulesName == listBanks[j].shortName){
+            listBanks[j].updateAppSupport(true);
+          }
+        }
+      }
+    }
     print("checklistBank: ${listBanks}");
     try {
       if (mounted && listBanks.isNotEmpty) {
@@ -132,25 +145,52 @@ class _SelectionBankScreen extends State<SelectionBankScreen> {
                             itemBuilder: (context, index) {
                               final item = listBanks[index];
                               return Card(
-                                  color: Colors.white,
-                                  child: ListTile(
-                                    leading: Image.network(
-                                      item.logo, // Thay đổi URL này thành URL hình ảnh thực tế
-                                      width: 90, // Chiều rộng hình vuông
-                                      height: 50, // Chiều cao hình vuông
-                                      fit: BoxFit.contain, // Cách hiển thị hình
+                                color: item.appSupport == true
+                                    ? Colors.white
+                                    : Colors.white70,
+                                child: ListTile(
+                                  leading: Image.network(
+                                    item.logo,
+                                    width: 90,
+                                    height: 50,
+                                    fit: BoxFit.contain,
+                                  ),
+                                  title: Text(
+                                    item.shortName,
+                                    style: TextStyle(
+                                      color: item.appSupport == true
+                                          ? Colors.black
+                                          : Colors.grey,
                                     ),
-                                    title: Text(item.shortName),
-                                    subtitle: Text(item.bankName),
-                                    onTap: () {
-                                      // Trở về màn hình trước với giá trị đã chọn
+                                  ),
+                                  subtitle: Text(
+                                    item.bankName,
+                                    style: TextStyle(
+                                      color: item.appSupport == true
+                                          ? Colors.black
+                                          : Colors.grey,
+                                    ),
+                                  ),
+                                  onTap: () {
+                                    if (item.appSupport == true) {
                                       Navigator.pop(context, [
                                         item.logo,
                                         item.bankName,
                                         item.shortName
                                       ]);
-                                    },
-                                  ));
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              "Hệ thống chưa hỗ trợ ngân hàng này."),
+                                          duration: Duration(seconds: 2),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                ),
+                              );
                             },
                           ),
                         ),
