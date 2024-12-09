@@ -5,15 +5,19 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.FileProvider
 import com.google.gson.Gson
+import io.flutter.BuildConfig
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 
 class MainActivity: FlutterActivity() {
     private val CHANNEL = "com.example.yourapp/notifications"
     private val CHANNELCONNECTDATA = "com.bankfeed.app/data"
     private val CHANNELWEBHOOK = "com.bankfeed.app/webhook"
     private val CHANNELRULE = "com.bankfeed.app/rule"
+    private val CHANNELVERSION = "com.bankfeed.app/version"
     private val REQUEST_CODE = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -138,15 +142,6 @@ class MainActivity: FlutterActivity() {
                         result.success(null)
                     }
                 }
-//                else if(call.method == "updateStatusAsync"){
-//                    val statusAsync = call.argument<Boolean>("statusAsync")
-//                    statusAsync?.let {
-//                        Log.d("NativeData", "Nhận dữ liệu từ Flutter: $it")
-//                        val databaseHelper = DatabaseHelper(applicationContext)
-//                        databaseHelper.updateStatusAsync(0,statusAsync);
-//                        result.success("Dữ liệu nhận thành công trên Android Native")
-//                    } ?: result.error("NULL_INPUT", "Input từ Flutter là null", null)
-//                }
                 else {
                     result.notImplemented()
                 }
@@ -212,6 +207,24 @@ class MainActivity: FlutterActivity() {
                 }
                 else {
                     result.notImplemented()
+                }
+            }
+        }
+        flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
+            MethodChannel(messenger, CHANNELVERSION).setMethodCallHandler { call, result ->
+                if(call.method == "updateVersion"){
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val id = call.argument<Int>("id") // Nhận "ruleIn"
+                    val vesion = call.argument<String>("vesion");
+                    val releaseNotes = call.argument<String>("releaseNotes");
+                    databaseHelper.updateVersion(id, vesion,releaseNotes);
+                    result.success("Dữ liệu đã được xử lý thành công!")
+                }
+                else if(call.method == "getVersion"){
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val checkVersion = databaseHelper.getVersion();
+                    val jsonMessages = Gson().toJson(checkVersion)
+                    result.success(jsonMessages ?: "[]");
                 }
             }
         }

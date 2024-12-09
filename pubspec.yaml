@@ -25,6 +25,9 @@ dependencies:
   flutter_launcher_icons: ^0.14.1
   path_provider: ^2.1.5
   url_launcher: ^6.3.1
+  flutter_file_downloader: ^2.0.0
+  open_file: ^3.5.10
+  percent_indicator: ^4.2.4
 dev_dependencies:
   flutter_test:
     sdk: flutter

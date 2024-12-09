@@ -5,14 +5,17 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import '../model/ruleModel.dart';
-import 'package:page_transition/page_transition.dart';
 import 'package:flutter/material.dart';
+import '../model/versionModel.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
 
 class NativeDataChannel {
   // Tạo MethodChannel với tên duy nhất
   static const platform = MethodChannel('com.bankfeed.app/data');
   static const platformWebHook = MethodChannel('com.bankfeed.app/webhook');
   static const platformRule = MethodChannel('com.bankfeed.app/rule');
+  static const platformVersion = MethodChannel('com.bankfeed.app/version');
   // Hàm gọi tới Native để lấy dữ liệu
   static Future<List<SmsModel>> getNativeData() async {
     try {
@@ -89,8 +92,9 @@ class NativeDataChannel {
     }
   }
 
-  static Future<bool> postRule(String rule, String typeRule, BuildContext context) async {
-        print("rule name: ${rule}");
+  static Future<bool> postRule(
+      String rule, String typeRule, BuildContext context) async {
+    print("rule name: ${rule}");
     if (rule != '') {
       try {
         await platformRule.invokeMethod('postRule', {
@@ -114,7 +118,7 @@ class NativeDataChannel {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
-            backgroundColor:  Color(0xFFc93131),
+            backgroundColor: Color(0xFFc93131),
           ),
         );
 
@@ -125,7 +129,7 @@ class NativeDataChannel {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Không được để trống ngân hàng!'),
-          backgroundColor:  Color(0xFFc93131),
+          backgroundColor: Color(0xFFc93131),
         ),
       );
       return false;
@@ -168,9 +172,9 @@ class NativeDataChannel {
 
   static Future<bool> updateRuleDataBase(
       Rule ruleUpdate, BuildContext context) async {
-          print("Log message");
+    print("Log message");
     if (ruleUpdate.rulesName != '') {
-         print("Log message23");
+      print("Log message23");
       try {
         await platformRule.invokeMethod("updateRule", {
           'id': ruleUpdate.typeId,
@@ -185,7 +189,7 @@ class NativeDataChannel {
             backgroundColor: Colors.green,
           ),
         );
-        print("Lỗi không xác định: ${ Navigator.canPop(context)}");
+        print("Lỗi không xác định: ${Navigator.canPop(context)}");
         // Quay lại và trả về `true` để biểu thị thành công
         if (Navigator.canPop(context)) {
           Navigator.pop(context, true);
@@ -196,7 +200,7 @@ class NativeDataChannel {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
-            backgroundColor: Color(0xFFc93131) ,
+            backgroundColor: Color(0xFFc93131),
           ),
         );
         return false;
@@ -205,7 +209,7 @@ class NativeDataChannel {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Không được để trống ngân hàng'),
-          backgroundColor:  Color(0xFFc93131),
+          backgroundColor: Color(0xFFc93131),
         ),
       );
       return false;
@@ -228,7 +232,7 @@ class NativeDataChannel {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Lỗi không xác định'),
-          backgroundColor:  Color(0xFFc93131),
+          backgroundColor: Color(0xFFc93131),
         ),
       );
       return false;
@@ -240,7 +244,7 @@ class NativeDataChannel {
  * &
  * Trả về danh sách các rule
  *  */
-static Future<List<Rule>> getAllRules() async {
+  static Future<List<Rule>> getAllRules() async {
     try {
       String jsonData = await platformRule.invokeMethod('getAllRules');
       print("jsonData2: $jsonData");
@@ -252,5 +256,50 @@ static Future<List<Rule>> getAllRules() async {
       print("Lỗi khi gửi dữ liệuae2: $e");
       return [];
     }
+  }
+
+  static Future<versionModel?> getVersion() async {
+    try {
+      String jsonData = await platformVersion.invokeMethod('getVersion');
+
+      // Parse JSON string thành Map
+      Map<String, dynamic> parsedJson = json.decode(jsonData);
+      versionModel chechVersion = versionModel.fromJson(parsedJson);
+      return chechVersion;
+    } catch (e) {
+      print("Lỗi khi gửi dữ liệuae2: $e");
+      return null;
+    }
+  }
+
+  static Future<bool> updateVersion(
+      int versionID, String vesion, String releaseNotes) async {
+    try {
+      await platformVersion.invokeMethod('updateVersion',
+          {"id": versionID, "vesion": vesion, "releaseNotes": releaseNotes});
+      return true;
+    } catch (e) {
+      print("Lỗi khi gửi dữ liệuae2: $e");
+      return false;
+    }
+  }
+
+  // Kiểm tra và yêu cầu quyền
+  static Future<bool> requestStoragePermission() async {
+    var status = await Permission.storage.status;
+    if (!status.isGranted) {
+      status = await Permission.storage.request();
+    }
+    return status.isGranted;
+  }
+
+// Hàm kiểm tra và yêu cầu quyền
+  static Future<bool> requestInstallPermission() async {
+    var status = await Permission.requestInstallPackages.status;
+    if (!status.isGranted) {
+      // Nếu quyền chưa được cấp, yêu cầu quyền
+      await Permission.requestInstallPackages.request();
+    }
+    return status.isGranted;
   }
 }

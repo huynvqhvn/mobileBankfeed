@@ -1,6 +1,3 @@
-import 'dart:ffi';
-import 'package:floor/floor.dart';
-
 class Rule {
   final int id;
   final String rulesName; // Tên thuộc tính trong lớp

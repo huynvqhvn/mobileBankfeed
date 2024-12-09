@@ -42,6 +42,11 @@ private const val COLUMN_WEBHOOKS_ID = "webhooksID"
 private const val COLUMN_WEBHOOKS_BASE = "webhookBase"
 private const val COLUMN_WEBHOOKS_ENDPOINT = "webhookEndPoint"
 private const val COLUMN_STATUS_ASYNC = "statusAsync"
+// data base version manager
+private const val TABLE_VERSION_APP = "versionapp"
+private const val COLUMN_VERSION_APP_ID = "versionId"
+private const val COLUMN_VERSION_APP = "version"
+private const val COLUMN_VERSION_NOTE = "releaseNotes"
 class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     // Tạo bảng messages
@@ -74,11 +79,16 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 + COLUMN_WEBHOOKS_ENDPOINT + " TEXT, "
                 + COLUMN_STATUS_ASYNC + " INTEGER"
                 + ")")
-
+        val createTableVersionApp = ("CREATE TABLE " + TABLE_VERSION_APP + "("
+                + COLUMN_VERSION_APP_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COLUMN_VERSION_APP + " TEXT, "
+                + COLUMN_VERSION_NOTE + " TEXT "
+                + ")")
         db.execSQL(createTableMessages)
         db.execSQL(createTableRules)
         db.execSQL(createTableTypes)
         db.execSQL(createTableWebHooks)
+        db.execSQL(createTableVersionApp)
     }
 
 
@@ -569,7 +579,6 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL("DELETE FROM $TABLE_RULES WHERE $COLUMN_RULES_ID = ?", arrayOf(id.toString()))
         db.close()
     }
-
     /* Update Rule Selected
     * typeID: Id type to selected
     * ruleTypeSelected: status selected true or false
@@ -601,15 +610,111 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     }
     /* Khởi tạo data khi người dùng truy cập lần đầu
     * */
+
+    /* Thêm dữ liệu phiên bản vào cơ sở dữ liệu hệ thống
+ * version: phiên bản ứng dụng
+ * releaseNotes: ghi chứ ứng dụng
+ * */
+    fun addNewVersion(version:String?,releaseNotes:String?): Long {
+        val db = this.writableDatabase
+        val contentValues = ContentValues().apply {
+            put(COLUMN_VERSION_APP, version);
+            put(COLUMN_VERSION_NOTE,releaseNotes);
+        }
+
+        return try {
+            val result = db.insert(TABLE_VERSION_APP, null, contentValues)
+            return result // Trả về kết quả chèn
+        } catch (e: Exception) {
+            Log.e("DatabaseError", "Lỗi khi chèn dữ liệu: ${e.message}")
+            return -1 // Trả về -1 để báo lỗi khi chèn thất bại
+        } finally {
+            db.close() // Đảm bảo đóng db dù có lỗi hay không
+        }
+    }
+
+    /* Lấy quy tắc theo id của quy tắc đó
+    * */
+    fun getVersion(): Version? {
+        val selectQuery = """
+        SELECT *
+        FROM $TABLE_VERSION_APP
+        ORDER BY $COLUMN_VERSION_APP_ID DESC
+        LIMIT 1
+    """
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+
+        var versionModel: Version? = null
+
+        try {
+            if (cursor.moveToFirst()) {
+                // Chỉ lấy bản ghi đầu tiên
+                versionModel = Version(
+                    id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_VERSION_APP_ID)),
+                    version = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VERSION_APP)),
+                    releaseNotes = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_VERSION_NOTE)),
+                )
+            }
+        } finally {
+            cursor.close()
+            db.close()
+        }
+
+        return versionModel
+    }
+
+    /* updateVersion
+ * versionID: id của bản ghi version
+ * version: phiên bản mới cần cập nhật
+ * releaseNotes: ghi chú từ phiên bản mới
+ */
+    fun updateVersion(versionID: Int?, version: String?,releaseNotes: String?) {
+        // Kiểm tra typeID và ruleTypeSelected có null hay không
+        if (versionID == null) {
+            throw IllegalArgumentException("typeID không được null")
+        }
+
+        val db = this.writableDatabase
+        val contentValues = ContentValues().apply {
+            put(COLUMN_VERSION_APP,version);
+            put(COLUMN_VERSION_NOTE,releaseNotes);
+        }
+
+        // Cập nhật bản ghi trong bảng Types
+        val rowsAffected = db.update(
+            TABLE_VERSION_APP,
+            contentValues,
+            "$COLUMN_VERSION_APP_ID = ?", // Đảm bảo sử dụng COLUMN_TYPES_ID thay vì COLUMN_RULES_ID
+            arrayOf(versionID.toString())
+        )
+
+        // Kiểm tra xem có bản ghi nào được cập nhật hay không
+        if (rowsAffected == 0) {
+            throw Exception("Không tìm thấy bản ghi với typeID: $versionID")
+        }
+        db.close() // Đóng cơ sở dữ liệu
+    }
     fun initializeData() {
         val ruleTypeList = getAllRules();
+        val versionCheck = getVersion();
+        val version_curent = "1.0.5";
+        val note = "Update mới chức năng cập nhật";
         // check database rule exit
         if(ruleTypeList.isEmpty()){
             Log.d("checkdataExit", "initializeData: ${ruleTypeList}")
+            // add new rule bidv
             addRule("BIDV");
             val ruleId = getNewRuleId();
             addNewType("sms","BIDV",ruleId);
             addNewType("app","com.vnpay.bidv",ruleId);
+        }
+        if(versionCheck == null){
+            Log.d("checkdataExit", "initializeData: ${versionCheck}")
+            addNewVersion(version_curent,"demoupdate");
+        }
+        else if(versionCheck.version != version_curent){
+            updateVersion(versionCheck.id,version_curent,note);
         }
     }
 }
@@ -638,4 +743,10 @@ data class WebHook(
     val webHookBase: String,
     val webhookEndPoint: String,
     val statusAsync: Int,
+)
+
+data class Version(
+    val id: Int,
+    val version: String,
+    val releaseNotes: String,
 )

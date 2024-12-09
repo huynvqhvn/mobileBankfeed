@@ -63,14 +63,14 @@ class _SelectionBankScreen extends State<SelectionBankScreen> {
   }
 
   // Function to search bank by name or shortname
-  Future<void> SearchBanks(valueSearch) async {
+  Future<void> SearchBanks(String valueSearch) async {
     print("valueSearch : ${valueSearch}");
     List<BankModel> listBankSearch = [];
     if (valueSearch != "" && listBanks.isNotEmpty) {
       //loop to each bank in list
       for (int i = 0; i < listBanks.length; i++) {
-        if (listBanks[i].bankName.toLowerCase().contains(valueSearch) ||
-            listBanks[i].shortName.toLowerCase().contains(valueSearch) ||
+        if (listBanks[i].bankName.toLowerCase().contains(valueSearch.toLowerCase()) ||
+            listBanks[i].shortName.toLowerCase().contains(valueSearch.toLowerCase()) ||
             listBanks[i].shortName == valueSearch ||
             listBanks[i].bankName == valueSearch) {
           listBankSearch.add(listBanks[i]);

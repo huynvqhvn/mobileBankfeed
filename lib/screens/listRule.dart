@@ -1,18 +1,15 @@
 import 'package:bank_feed_vs1/model/smsModel.dart';
 import 'package:flutter/material.dart';
-import '../model/ruleModel.dart';
-import '../service/connectBe.dart';
-import "../service/getDataSevice.dart";
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:page_transition/page_transition.dart';
-import 'addRule.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
-import "managerRule.dart";
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'package:url_launcher/url_launcher.dart';
-
+import '../model/ruleModel.dart';
+import '../service/connectBe.dart';
+import "../service/getDataSevice.dart";
+import '../Component/dialogComponent.dart';
 class ListRule extends StatefulWidget {
   const ListRule({super.key});
   @override
@@ -27,6 +24,7 @@ class _ListRuleState extends State<ListRule> {
   late final TextEditingController Webhook;
   late String? idService = "";
   bool statusScreen = false;
+  late String checkVersion ="";
   final List<String> guideSteps = [
     "Bước 1: Mở ứng dụng.",
     "Bước 2: Đăng nhập vào trang https://id.hvn.vn/",
@@ -34,7 +32,7 @@ class _ListRuleState extends State<ListRule> {
     "Bước 4: Copy link webhooks của bạn",
     "Bước 5: Trở về app BankFeeds và điền webhooks",
     "Bước 6: Tạo các quy tắc nhận tin nhắn của bạn ở trên trang https://id.hvn.vn/",
-    "Bước 7: Tạo các quy tắc tương tự trên trang https://id.hvn.vn/ trên app điện thoại",
+    "Bước 7: Tạo các quy tắc tương tự trên trang https://id.hvn.vn/ trên app điện thoại"
   ];
   @override
   void initState() {
@@ -59,6 +57,8 @@ class _ListRuleState extends State<ListRule> {
       useWeebHook = await NativeDataChannel.getDataWebhook();
       listRule = await NativeDataChannel.getRule();
       final SharedPreferences prefs = await SharedPreferences.getInstance();
+      checkVersion = await ConnectToBe.checkVersionSever();
+      print("lisRule checkVersion ${checkVersion}");
       idService = prefs.getString('Service ID');
       // Kiểm tra xem danh sách có rỗng không
       if (listRule.isNotEmpty) {
@@ -334,6 +334,7 @@ class _ListRuleState extends State<ListRule> {
                         },
                       ),
                     ),
+                    DialogComponent(version: checkVersion,)
                   ],
                 ),
         ),
