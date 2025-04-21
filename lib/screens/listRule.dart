@@ -10,6 +10,7 @@ import '../model/ruleModel.dart';
 import '../service/connectBe.dart';
 import "../service/getDataSevice.dart";
 import '../Component/dialogComponent.dart';
+
 class ListRule extends StatefulWidget {
   const ListRule({super.key});
   @override
@@ -24,7 +25,7 @@ class _ListRuleState extends State<ListRule> {
   late final TextEditingController Webhook;
   late String? idService = "";
   bool statusScreen = false;
-  late String checkVersion ="";
+  late String checkVersion = "";
   final List<String> guideSteps = [
     "Bước 1: Mở ứng dụng.",
     "Bước 2: Đăng nhập vào trang https://id.hvn.vn/",
@@ -83,6 +84,8 @@ class _ListRuleState extends State<ListRule> {
     String userWebhookInput = Webhook.text.trim();
     RegExp regex = RegExp(
         r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+$');
+    //  RegExp regex = RegExp(
+    // r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+$');
     if (regex.hasMatch(userWebhookInput)) {
       print("checkWeebhook match");
       await NativeDataChannel.sendDataWebhookToNative(
@@ -271,7 +274,7 @@ class _ListRuleState extends State<ListRule> {
                     ]),
                     SizedBox(height: 15),
                     Container(
-                      height: 200, // Chiều cao cụ thể cho ListView
+                      height: 220, // Chiều cao cụ thể cho ListView
                       child: ListView.builder(
                         itemCount: guideSteps.length,
                         itemBuilder: (context, index) {
@@ -334,7 +337,9 @@ class _ListRuleState extends State<ListRule> {
                         },
                       ),
                     ),
-                    DialogComponent(version: checkVersion,)
+                    DialogComponent(
+                      version: checkVersion,
+                    )
                   ],
                 ),
         ),

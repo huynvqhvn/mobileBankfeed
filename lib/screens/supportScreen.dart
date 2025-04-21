@@ -113,7 +113,7 @@ class _SupportScreen extends State<SupportScreen> {
                             mainAxisAlignment:
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             children: [
-                              Icon(Icons.app_registration),
+                              Icon(Icons.app_registration,color: Color(0xFFeb4444)),
                               SizedBox(width: 8),
                               Text(
                                 "Tên ứng dụng : ",
@@ -142,7 +142,7 @@ class _SupportScreen extends State<SupportScreen> {
                             mainAxisAlignment:
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             children: [
-                              Icon(Icons.location_city),
+                              Icon(Icons.location_city,color: Color(0xFFeb4444)),
                               SizedBox(width: 8),
                               Text(
                                 "Đơn vị sở hữu : ",
@@ -172,7 +172,7 @@ class _SupportScreen extends State<SupportScreen> {
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.location_on),
+                              Icon(Icons.location_on,color: Color(0xFFeb4444)),
                               SizedBox(width: 8),
                               Text(
                                 "Địa chỉ : ",
@@ -202,7 +202,7 @@ class _SupportScreen extends State<SupportScreen> {
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.email),
+                              const Icon(Icons.email,color: Color(0xFFeb4444)),
                               const SizedBox(width: 8),
                               const Text(
                                 "Email:",
@@ -233,7 +233,7 @@ class _SupportScreen extends State<SupportScreen> {
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.email),
+                              Icon(Icons.email,color: Color(0xFFeb4444)),
                               SizedBox(width: 8),
                               Text(
                                 "Email:",

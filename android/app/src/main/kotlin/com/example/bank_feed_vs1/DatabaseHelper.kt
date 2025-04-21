@@ -574,7 +574,13 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
 
         db.close() // Đóng cơ sở dữ liệu
     }
-    fun deleteRule(id: Int?) {
+    /* deleteAllRule: Xóa hết các rule */
+    fun deleteAllRule () { 
+        val db = this.writableDatabase
+        db.execSQL("DELETE FROM $TABLE_RULES")
+        db.close()
+    }
+    fun deleteRuleWithId(id: Int?) {
         val db = this.writableDatabase
         db.execSQL("DELETE FROM $TABLE_RULES WHERE $COLUMN_RULES_ID = ?", arrayOf(id.toString()))
         db.close()
@@ -700,21 +706,72 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         val versionCheck = getVersion();
         val version_curent = "1.0.5";
         val note = "Update mới chức năng cập nhật";
-        // check database rule exit
-        if(ruleTypeList.isEmpty()){
-            Log.d("checkdataExit", "initializeData: ${ruleTypeList}")
-            // add new rule bidv
-            addRule("BIDV");
-            val ruleId = getNewRuleId();
-            addNewType("sms","BIDV",ruleId);
-            addNewType("app","com.vnpay.bidv",ruleId);
-        }
         if(versionCheck == null){
             Log.d("checkdataExit", "initializeData: ${versionCheck}")
             addNewVersion(version_curent,"demoupdate");
         }
         else if(versionCheck.version != version_curent){
             updateVersion(versionCheck.id,version_curent,note);
+            deleteAllRule();
+        }
+        // check database rule exit
+        if(ruleTypeList.isEmpty()){
+            Log.d("checkdataExit", "initializeData: ${ruleTypeList}")
+            // add new rule bidv
+            addRule("BIDV");
+            val ruleBidv = getNewRuleId();
+            addNewType("sms","BIDV",ruleBidv);
+            addNewType("app","com.vnpay.bidv",ruleBidv);
+            // add new rule ACB
+            addRule("ACB");
+            val ruleAcb = getNewRuleId();
+            addNewType("sms","ACB",ruleAcb);
+            addNewType("app","mobile.acb.com.vn",ruleAcb);
+            //add new rule VietinBank
+            addRule("VietinBank");
+            val ruleVietinBank = getNewRuleId();
+            addNewType("sms","VietinBank",ruleVietinBank);
+            addNewType("app","com.vietinbank.ipay",ruleVietinBank);
+            //add new rule Vietcombank
+            addRule("Vietcombank");
+            val ruleVietcombank = getNewRuleId();
+            addNewType("sms","Vietcombank",ruleVietcombank);
+            addNewType("app","com.VCB",ruleVietcombank);
+            //add new rule Agribank
+            addRule("Agribank");
+            val ruleAgribank = getNewRuleId();
+            addNewType("sms","Agribank",ruleAgribank);
+            addNewType("app","com.vnpay.Agribank3g",ruleAgribank);
+            //add new rule OCB
+            addRule("OCB");
+            val ruleOCB = getNewRuleId();
+            addNewType("sms","OCB",ruleOCB);
+            addNewType("app","vn.com.ocb.awe",ruleOCB);
+            //add new rule MBBank
+            addRule("MBBank");
+            val ruleMBBank = getNewRuleId();
+            addNewType("sms","MBBank",ruleMBBank);
+            addNewType("app","com.mbmobile",ruleMBBank);
+            //add new rule Techcombank
+            addRule("Techcombank");
+            val ruleTechcombank = getNewRuleId();
+            addNewType("sms","Techcombank",ruleTechcombank);
+            addNewType("app","vn.com.techcombank.bb.app",ruleTechcombank);
+            //add new rule VPBank
+            addRule("VPBank");
+            val ruleVPBank = getNewRuleId();
+            addNewType("sms","VPBank",ruleVPBank);
+            addNewType("app","com.vnpay.vpbankonline",ruleVPBank);
+            //add new rule VPBank
+            addRule("TPBank");
+            val ruleTPBank = getNewRuleId();
+            addNewType("sms","TPBank",ruleTPBank);
+            addNewType("app","com.tpb.mb.gprsandroid",ruleTPBank );
+            //add new rule Sacombank
+            addRule("Sacombank");
+            val ruleSacombank = getNewRuleId();
+            addNewType("sms","Sacombank",ruleSacombank);
+            addNewType("app","com.sacombank.ewallet",ruleSacombank );
         }
     }
 }
