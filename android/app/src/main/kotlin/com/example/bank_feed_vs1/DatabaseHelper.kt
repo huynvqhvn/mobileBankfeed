@@ -730,7 +730,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             //add new rule VietinBank
             addRule("VietinBank");
             val ruleVietinBank = getNewRuleId();
-            addNewType("sms","VietinBank",ruleVietinBank);
+            addNewType("sms","Vietinbank",ruleVietinBank);
             addNewType("app","com.vietinbank.ipay",ruleVietinBank);
             //add new rule Vietcombank
             addRule("Vietcombank");
@@ -772,6 +772,18 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
             val ruleSacombank = getNewRuleId();
             addNewType("sms","Sacombank",ruleSacombank);
             addNewType("app","com.sacombank.ewallet",ruleSacombank );
+            addRule("VIB");
+            val ruleVIB = getNewRuleId();
+            addNewType("sms","VIB",ruleVIB);
+            addNewType("app","com.vib.myvib2",ruleVIB );
+            addRule("MSB");
+            val ruleMSB = getNewRuleId();
+            addNewType("sms","MSB",ruleMSB);
+            addNewType("app","vn.com.msb.smartBanking",ruleMSB );
+            addRule("SHB");
+            val ruleSHB = getNewRuleId();
+            addNewType("sms","SHB",ruleSHB);
+            addNewType("app","vn.shb.mbanking",ruleSHB );
         }
     }
 }

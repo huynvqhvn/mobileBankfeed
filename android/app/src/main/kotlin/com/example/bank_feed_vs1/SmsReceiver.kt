@@ -20,11 +20,13 @@ class SmsReceiver : BroadcastReceiver() {
         if (bundle != null) {
             val pdus = bundle["pdus"] as Array<*>
             val messages = arrayOfNulls<SmsMessage>(pdus.size)
-
             for (i in pdus.indices) {
                 messages[i] = SmsMessage.createFromPdu(pdus[i] as ByteArray)
                 sender = messages[i]?.originatingAddress.toString()
                 smsBody += messages[i]?.messageBody.toString()
+                    .replace("\n", " ")  // Thay thế xuống dòng Unix/Linux
+                    .replace("\r", " ")  // Thay thế xuống dòng Windows
+                    .replace("\r\n", " ") // Thay thế xuống dòng Windows đầy đủ
                 timestamp = messages[i]?.timestampMillis ?: 0
             }
 

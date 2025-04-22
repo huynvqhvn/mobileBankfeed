@@ -83,7 +83,9 @@ class _ListRuleState extends State<ListRule> {
   Future<void> checkWeebhook() async {
     String userWebhookInput = Webhook.text.trim();
     RegExp regex = RegExp(
-        r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+$');
+    r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+&token=[a-f0-9]+$');
+    // RegExp regex = RegExp(
+    //     r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+$');
     //  RegExp regex = RegExp(
     // r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+$');
     if (regex.hasMatch(userWebhookInput)) {
