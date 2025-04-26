@@ -704,7 +704,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     fun initializeData() {
         val ruleTypeList = getAllRules();
         val versionCheck = getVersion();
-        val version_curent = "1.0.5";
+        val version_curent = "1.0.6";
         val note = "Update mới chức năng cập nhật";
         if(versionCheck == null){
             Log.d("checkdataExit", "initializeData: ${versionCheck}")
