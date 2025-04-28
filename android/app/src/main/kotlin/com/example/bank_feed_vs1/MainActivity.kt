@@ -13,6 +13,7 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity: FlutterActivity() {
+     // Define MethodChannel names for communication between Flutter and Native
     private val CHANNEL = "com.example.yourapp/notifications"
     private val CHANNELCONNECTDATA = "com.bankfeed.app/data"
     private val CHANNELWEBHOOK = "com.bankfeed.app/webhook"
@@ -22,13 +23,16 @@ class MainActivity: FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+         // Initialize the database and start the foreground service
         val databaseHelper = DatabaseHelper(applicationContext);
         databaseHelper.initializeData();
         val serviceIntent = Intent(this, MyForegroundService::class.java)
+        // MethodChannel for handling notification access settings
         flutterEngine?.dartExecutor?.binaryMessenger?.let {
+            //        open request access notification
             MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
                 if (call.method == "openNotificationAccessSettings") {
-                    // Lấy `Context` từ `this` hoặc ép kiểu `it` về `Context`
+                      // Open notification access settings for the user
                     val context = this // Nếu trong Activity
                     // val context = it as Context // Nếu `it` không được nhận diện tự động
 
@@ -54,11 +58,13 @@ class MainActivity: FlutterActivity() {
                 }
             }
 
-
         }
+        // MethodChannel for transferring data between Flutter and Native
         flutterEngine?.dartExecutor?.binaryMessenger?.let {
+            // Tranfer data messages to flutter
             MethodChannel(it, CHANNELCONNECTDATA).setMethodCallHandler { call, result ->
                 if (call.method == "getNativeData") {
+                    // Retrieve all messages from the database and send them to Flutter
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val checkData = databaseHelper.getAllMessages();
                     val jsonMessages = Gson().toJson(checkData)
@@ -66,7 +72,9 @@ class MainActivity: FlutterActivity() {
                     result.success(jsonMessages ?: "[]")
 
                 }
+                
                 else if (call.method == "getAsyncData"){
+                    // Update async status and start the foreground service
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val input = call.argument<Boolean>("asyncData") ?: false // Đặt giá trị mặc định là false nếu `input` là null
                     databaseHelper.updateStatusAsync(1,input);
@@ -90,6 +98,7 @@ class MainActivity: FlutterActivity() {
 
                 }
                 else if(call.method == "getAsyncDataFlutter"){
+                     // Retrieve async status and send it to Flutter
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val webHookList = databaseHelper.getWebhooks();
                     if (!webHookList.isNullOrEmpty()) {
@@ -107,9 +116,11 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
+         // MethodChannel for managing webhooks
         flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
             MethodChannel(messenger, CHANNELWEBHOOK).setMethodCallHandler { call, result ->
                 if (call.method == "userwebhook") {
+                    // Add or update webhook in the database
                     val input = call.argument<String>("input")
                     input?.let {
                         Log.d("NativeData", "Nhận dữ liệu từ Flutter: $it")
@@ -129,6 +140,7 @@ class MainActivity: FlutterActivity() {
                     } ?: result.error("NULL_INPUT", "Input từ Flutter là null", null)
                 }
                 else if (call.method == "getuserwebhook") {
+                    // Retrieve webhook from the database and send it to Flutter
                     val databaseHelper = DatabaseHelper(applicationContext)
                     val webHookList = databaseHelper.getWebhooks()
 
@@ -147,9 +159,11 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
+         // MethodChannel for managing rules
         flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
             MethodChannel(messenger, CHANNELRULE).setMethodCallHandler { call, result ->
                 if (call.method == "postRule") {
+                    // Add or update a rule in the database
                     val rule = call.argument<String>("ruleIn") // Nhận "ruleIn"
                     val typeRule = call.argument<String>("typeRule") // Nhận "typeRule"
 
@@ -165,6 +179,7 @@ class MainActivity: FlutterActivity() {
                     }
                 }
                 else if (call.method == "getRule"){
+                    // Retrieve selected rules from the database
                     val databaseHelper = DatabaseHelper(applicationContext)
                     val dataReturn = databaseHelper.getAllRulesSelected();
                     if(!dataReturn.isNullOrEmpty()){
@@ -177,6 +192,7 @@ class MainActivity: FlutterActivity() {
                     }
                 }
                 else if(call.method == "updateRule"){
+                    // Update a specific rule in the database
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val id = call.argument<Int>("id") // Nhận "ruleIn"
                     val nameRule = call.argument<String>("ruleName");
@@ -188,12 +204,14 @@ class MainActivity: FlutterActivity() {
                     result.success("Dữ liệu đã được xử lý thành công!")
                 }
                 else if (call.method =="deleteRule"){
+                    // Delete a rule from the database
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val id = call.argument<Int>("ruleDelete") // Nhận "ruleIn"
                     databaseHelper.updateRuleTypeSelected(id,false);
                     result.success("Dữ liệu đã được xử lý thành công!")
                 }
                 else if (call.method == "getAllRules"){
+                       // Retrieve all rules from the database
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val dataReturn = databaseHelper.getAllRules();
                     if(!dataReturn.isNullOrEmpty()){
@@ -210,9 +228,11 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
+          // MethodChannel for managing app version
         flutterEngine?.dartExecutor?.binaryMessenger?.let { messenger ->
             MethodChannel(messenger, CHANNELVERSION).setMethodCallHandler { call, result ->
                 if(call.method == "updateVersion"){
+                    // Update app version in the database
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val id = call.argument<Int>("id") // Nhận "ruleIn"
                     val vesion = call.argument<String>("vesion");
@@ -221,6 +241,7 @@ class MainActivity: FlutterActivity() {
                     result.success("Dữ liệu đã được xử lý thành công!")
                 }
                 else if(call.method == "getVersion"){
+                     // Retrieve app version from the database
                     val databaseHelper = DatabaseHelper(applicationContext);
                     val checkVersion = databaseHelper.getVersion();
                     val jsonMessages = Gson().toJson(checkVersion)

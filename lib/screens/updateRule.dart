@@ -85,7 +85,7 @@ class _UpdateruleState extends State<Updaterule> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Thêm Quy Tắc",
+                      "Cập Nhật Quy Tắc",
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),

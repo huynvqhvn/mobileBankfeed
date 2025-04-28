@@ -23,17 +23,13 @@ class _SupportScreen extends State<SupportScreen> {
   Future<void> initPlatformState() async {
     await Future.delayed(Duration(seconds: 2));
     try {
-      // Kiểm tra xem danh sách có rỗng không
-
       if (mounted) {
         setState(() {
-          statusScreen =
-              true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+          statusScreen = true;
         });
       } else {
         setState(() {
-          statusScreen =
-              true; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+          statusScreen = true;
         });
       }
     } catch (e) {
@@ -113,7 +109,8 @@ class _SupportScreen extends State<SupportScreen> {
                             mainAxisAlignment:
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             children: [
-                              Icon(Icons.app_registration,color: Color(0xFFeb4444)),
+                              Icon(Icons.app_registration,
+                                  color: Color(0xFFeb4444)),
                               SizedBox(width: 8),
                               Text(
                                 "Tên ứng dụng : ",
@@ -142,7 +139,8 @@ class _SupportScreen extends State<SupportScreen> {
                             mainAxisAlignment:
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             children: [
-                              Icon(Icons.location_city,color: Color(0xFFeb4444)),
+                              Icon(Icons.location_city,
+                                  color: Color(0xFFeb4444)),
                               SizedBox(width: 8),
                               Text(
                                 "Đơn vị sở hữu : ",
@@ -172,7 +170,7 @@ class _SupportScreen extends State<SupportScreen> {
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.location_on,color: Color(0xFFeb4444)),
+                              Icon(Icons.location_on, color: Color(0xFFeb4444)),
                               SizedBox(width: 8),
                               Text(
                                 "Địa chỉ : ",
@@ -202,7 +200,7 @@ class _SupportScreen extends State<SupportScreen> {
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Icon(Icons.email,color: Color(0xFFeb4444)),
+                              const Icon(Icons.email, color: Color(0xFFeb4444)),
                               const SizedBox(width: 8),
                               const Text(
                                 "Email:",
@@ -233,7 +231,7 @@ class _SupportScreen extends State<SupportScreen> {
                                 MainAxisAlignment.start, // Giữ các widget ở đầu
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(Icons.email,color: Color(0xFFeb4444)),
+                              Icon(Icons.email, color: Color(0xFFeb4444)),
                               SizedBox(width: 8),
                               Text(
                                 "Email:",
@@ -291,6 +289,36 @@ class _SupportScreen extends State<SupportScreen> {
                               },
                               child: Text(
                                 'Hotline kinh doanh:  024.9999.7777',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          Align(
+                            alignment: Alignment.center, // Căn giữa nút
+                            child: ElevatedButton(
+                              style: ButtonStyle(
+                                backgroundColor: MaterialStateProperty.all(
+                                    Color(0xFFc93131)),
+                              ),
+                              onPressed: () async {
+                                const url =
+                                    'https://example.com'; // Thay bằng link của bạn
+                                if (await canLaunchUrl(Uri.parse(url))) {
+                                  await launchUrl(Uri.parse(url),
+                                      mode: LaunchMode.externalApplication);
+                                } else {
+                                  // Hiển thị thông báo nếu không mở được link
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Không thể mở liên kết'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                              },
+                              child: const Text(
+                                'Điều khoản và chính sách',
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),

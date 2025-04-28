@@ -29,6 +29,11 @@ private const val COLUMN_TYPE = "type"
 private const val TABLE_RULES = "rules"
 private const val COLUMN_RULES_ID = "rulesID"
 private const val COLUMN_RULES_NAME = "rulesName"
+// Định nghĩa bảng các từ không được dùng
+private const val TABLE_WORDS_FILTER = "words"
+private const val COLUMN_WORDS_ID = "wordsID"
+private const val COLUMN_WORDS_NAME = "wordsName"
+private const val COLUMN_RULES_ID = "rulesID"
 // Định nghĩa bảng mới và các type
 private const val TABLE_TYPES = "types"
 private const val COLUMN_TYPES_ID = "typesID"
@@ -72,6 +77,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 + COLUMN_RULE_ID + " INTEGER, "
                 + COLUMN_RULE_TYPE_IS_SELECTED + " INTEGER DEFAULT 0, " // Đảm bảo có dấu phẩy ở đây
                 + "FOREIGN KEY(" + COLUMN_RULE_ID + ") REFERENCES " + TABLE_RULES + "(id) ON DELETE CASCADE"
+                + ")")
+        val creataTableWordsFilter = ("CREATE TABLE" + TABLE_WORDS_FILTER + "("
+                + COLUMN_WORDS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COLUMN_WORDS_NAME + "TEXT"
+                + COLUMN_RULES_ID + " INTEGER, "
+                + "FOREIGN KEY(" + COLUMN_RULES_ID + ") REFERENCES " + TABLE_RULES + "(id) ON DELETE CASCADE"
                 + ")")
         val createTableWebHooks = ("CREATE TABLE " + TABLE_WEBHOOKS + "("
                 + COLUMN_WEBHOOKS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -517,6 +528,42 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         }
 
         return ruleType
+    }
+    /* Thêm từ vào bảng word filter
+    * wordFilter: từ filter
+    *  ruleID : sô id rule của type đó
+    *
+    * */
+    fun addNewWord(wordFilter:String?,ruleID:Int?) {
+        val db = this.writableDatabase
+        val contentValues = ContentValues().apply {
+            put(COLUMN_WORDS_NAME,wordFilter);
+            put(COLUMN_RULES_ID,ruleID);
+        }
+        return try {
+            val result = db.insert(TABLE_WORDS_FILTER, null, contentValues)
+            return result // Trả về kết quả chèn
+        } catch (e: Exception) {
+            Log.e("DatabaseError", "Lỗi khi chèn dữ liệu: ${e.message}")
+            return -1 // Trả về -1 để báo lỗi khi chèn thất bại
+        } finally {
+            db.close() // Đảm bảo đóng db dù có lỗi hay không
+        }
+    }
+    /*
+    * Lấy các từ lọc theo từng rule
+    * ruleID : sô id rule của type đó
+    * */
+    fun getWordbyRule (ruleID:Int?) {
+        
+    }
+    /* Xóa các từ khóa
+    *  wordID: id của wordID
+    * */
+    fun deleteWordbyId (wordsID: Int?) {
+        val db = this.writableDatabase
+        db.execSQL("DELETE FROM $TABLE_WORDS_FILTER WHERE $COLUMN_WORDS_ID = ?", arrayOf(wordsID.toString()))
+        db.close()
     }
     /* Thêm tpye của các quy tắc
     * typeName : tên của tpye
