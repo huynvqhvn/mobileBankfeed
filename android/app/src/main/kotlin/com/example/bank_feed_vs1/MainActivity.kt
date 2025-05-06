@@ -19,6 +19,7 @@ class MainActivity: FlutterActivity() {
     private val CHANNELWEBHOOK = "com.bankfeed.app/webhook"
     private val CHANNELRULE = "com.bankfeed.app/rule"
     private val CHANNELVERSION = "com.bankfeed.app/version"
+    private val CHANNELWORDFILTER = "com.bankfeed.app/wordfilter"
     private val REQUEST_CODE = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -217,6 +218,10 @@ class MainActivity: FlutterActivity() {
                     if(!dataReturn.isNullOrEmpty()){
                         val jsonMessages = Gson().toJson(dataReturn)
                         result.success(jsonMessages ?: "[]")
+                        val databaseHelper = DatabaseHelper(applicationContext);
+                        val id = call.argument<Int>("ruleDelete") // Nhận "ruleIn"
+                        databaseHelper.updateRuleTypeSelected(id,false);
+                        result.success("Dữ liệu đã được xử lý thành công!")
                     }
                     else {
                         // Trả về giá trị mặc định nếu danh sách rỗng
@@ -249,7 +254,42 @@ class MainActivity: FlutterActivity() {
                 }
             }
         }
-        // Khởi động Foreground Service khi ứng dụng bắt đầu
+         // MethodChannel for managing word filter
+        flutterEngine?.dartExecutor?.binaryMessenger?.let{
+            MethodChannel(it,CHANNELWORDFILTER).setMethodCallHandler { call, result ->
+                if (call.method == "getWordFilter") {
+                    // Retrieve word filter from the database
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val ruleId = call.argument<Int>("ruleId");
+                    val checkWordFilter = databaseHelper.getWordbyRule(ruleId);
+                    val jsonMessages = Gson().toJson(checkWordFilter);
+                    result.success(jsonMessages ?: "[]");
+                }
+                else if(call.method == "addWordFilter"){
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val ruleId = call.argument<Int>("ruleId");
+                    val wordFilter = call.argument<String>("wordFilter");
+                    val insertResult = databaseHelper.addNewWord(wordFilter,ruleId);
+                    if (insertResult != -1L){
+                        result.success("Dữ liệu đã được xử lý thành công!")
+                    }
+                    else {
+                        result.error("INVALID_DATA", "Dữ liệu không hợp lệ hoặc thiếu!", null)
+                    }
+                }
+                else if (call.method == "deleteWordFilter"){
+                    // delete word filter in the database
+                    val databaseHelper = DatabaseHelper(applicationContext);
+                    val wordId = call.argument<Int>("wordId") // Nhận "ruleIn"
+                    databaseHelper.deleteWordbyId(wordId);
+                    result.success("Dữ liệu đã được xử lý thành công!")
+                }
+                else {
+                    result.notImplemented()
+                }
+            }
+        }
+        // run Foreground Service when app runing
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent)
         } else {

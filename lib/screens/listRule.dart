@@ -82,20 +82,15 @@ class _ListRuleState extends State<ListRule> {
 
   Future<void> checkWeebhook() async {
     String userWebhookInput = Webhook.text.trim();
-    RegExp regex = RegExp(
-    r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+&token=[a-f0-9]+$');
-    // RegExp regex = RegExp(
-    //     r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+$');
-    //  RegExp regex = RegExp(
-    // r'^https:\/\/iddev\.hvn\.vn\/index\.php\?m=bankfeeds&id=[a-f0-9\-]+&action=[a-z\-]+$');
-    if (regex.hasMatch(userWebhookInput)) {
-      print("checkWeebhook match");
+    // Kiểm tra webhook có null hoặc rỗng hay không
+    if (userWebhookInput.isNotEmpty) {
+      print("Webhook không null hoặc rỗng");
       await NativeDataChannel.sendDataWebhookToNative(
           userWebhookInput, context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Webhook không đúng định dạng'),
+          content: Text('Webhook không được để trống'),
         ),
       );
     }

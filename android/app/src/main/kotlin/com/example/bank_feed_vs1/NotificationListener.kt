@@ -10,7 +10,10 @@ class NotificationListener : NotificationListenerService() {
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
         val packageName = sbn.packageName // Tên gói ứng dụng
-        val notificationContent = sbn.notification.extras.getString("android.text") ?: "No Content" // Nội dung thông báo
+        val notificationContent = sbn.notification.extras.getString("android.text")
+        ?.replace("\n", "")  // Thay thế xuống dòng Unix/Linux
+        ?.replace("\r", "")  // Thay thế xuống dòng Windows
+        ?.replace("\r\n", "") ?: "No Content" // Nội dung thông báo null
         val timestamp = sbn.postTime // Thời gian thông báo được tạo
 
         // Log dữ liệu thông báo

@@ -7,6 +7,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import '../model/ruleModel.dart';
 import 'package:flutter/material.dart';
 import '../model/versionModel.dart';
+import '../model/wordFilterModal.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
@@ -16,6 +17,7 @@ class NativeDataChannel {
   static const platformWebHook = MethodChannel('com.bankfeed.app/webhook');
   static const platformRule = MethodChannel('com.bankfeed.app/rule');
   static const platformVersion = MethodChannel('com.bankfeed.app/version');
+  static const platformWordFilter = MethodChannel('com.bankfeed.app/wordfilter');
   // Hàm gọi tới Native để lấy dữ liệu
   static Future<List<SmsModel>> getNativeData() async {
     try {
@@ -75,7 +77,7 @@ class NativeDataChannel {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Thêm webhook không thành công! ${e.toString()}'),
-          backgroundColor: Colors.green,
+          backgroundColor: Color(0xFFc93131),
         ),
       );
     }
@@ -301,5 +303,63 @@ class NativeDataChannel {
       await Permission.requestInstallPackages.request();
     }
     return status.isGranted;
+  }
+
+// add word filer to android native
+  static Future<bool> addWordFilter(String word,int ruleId,  BuildContext context) async {
+    print("word: ${word}, ruleId: ${ruleId}");
+    try {
+      await platformWordFilter.invokeMethod('addWordFilter', {"ruleId": ruleId,'wordFilter': word});
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Thêm từ lọc thành công!'),
+          backgroundColor: Colors.green,
+        ),
+       );
+        return true;
+    } catch (e) {
+      print("Lỗi không xác định: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Có lỗi xảy ra, vui lòng thử lại! $e'),
+          backgroundColor: Color(0xFFc93131),
+        ),
+      );
+       return false;
+    }
+  }
+  // get word filter from android native
+  static Future<List<Wordfiltermodal>> getWordFilter(int ruleId) async {
+    try {
+      String jsonData = await platformWordFilter.invokeMethod('getWordFilter', {"ruleId": ruleId});
+      List<dynamic> jsonList = json.decode(jsonData);
+      List<Wordfiltermodal> wordList = jsonList.map((item) => Wordfiltermodal.fromJson(item)).toList();
+      return wordList;
+    } catch (e) {
+      print("Lỗi không xác định: $e");
+      return [];
+    }
+  }
+  // delete word filter from android native
+  static Future<bool> deleteWordFilter(int wordId, BuildContext context) async {
+    try {
+      await platformWordFilter.invokeMethod('deleteWordFilter', {"wordId": wordId});
+       ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Xóa từ lọc thành công!'),
+          backgroundColor: Colors.green,
+        ),
+       );
+        return true;
+    } catch (e) {
+      print("Lỗi không xác định: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Có lỗi xảy ra, vui lòng thử lại!'),
+          backgroundColor: Color(0xFFc93131),
+        ),
+      );
+       return false;
+    }
   }
 }

@@ -33,7 +33,7 @@ private const val COLUMN_RULES_NAME = "rulesName"
 private const val TABLE_WORDS_FILTER = "words"
 private const val COLUMN_WORDS_ID = "wordsID"
 private const val COLUMN_WORDS_NAME = "wordsName"
-private const val COLUMN_RULES_ID = "rulesID"
+private const val COLUMN_RULESS_ID = "rulesID"
 // Định nghĩa bảng mới và các type
 private const val TABLE_TYPES = "types"
 private const val COLUMN_TYPES_ID = "typesID"
@@ -78,12 +78,12 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
                 + COLUMN_RULE_TYPE_IS_SELECTED + " INTEGER DEFAULT 0, " // Đảm bảo có dấu phẩy ở đây
                 + "FOREIGN KEY(" + COLUMN_RULE_ID + ") REFERENCES " + TABLE_RULES + "(id) ON DELETE CASCADE"
                 + ")")
-        val creataTableWordsFilter = ("CREATE TABLE" + TABLE_WORDS_FILTER + "("
-                + COLUMN_WORDS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
-                + COLUMN_WORDS_NAME + "TEXT"
-                + COLUMN_RULES_ID + " INTEGER, "
-                + "FOREIGN KEY(" + COLUMN_RULES_ID + ") REFERENCES " + TABLE_RULES + "(id) ON DELETE CASCADE"
-                + ")")
+       val creataTableWordsFilter = ("CREATE TABLE " + TABLE_WORDS_FILTER + " ("
+        + COLUMN_WORDS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
+        + COLUMN_WORDS_NAME + " TEXT, "
+        + COLUMN_RULESS_ID + " INTEGER, "
+        + "FOREIGN KEY(" + COLUMN_RULESS_ID + ") REFERENCES " + TABLE_RULES + "(" + COLUMN_RULES_ID + ") ON DELETE CASCADE"
+        + ")")
         val createTableWebHooks = ("CREATE TABLE " + TABLE_WEBHOOKS + "("
                 + COLUMN_WEBHOOKS_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, "
                 + COLUMN_WEBHOOKS_BASE + " TEXT, "
@@ -100,6 +100,7 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
         db.execSQL(createTableTypes)
         db.execSQL(createTableWebHooks)
         db.execSQL(createTableVersionApp)
+        db.execSQL(creataTableWordsFilter)
     }
 
 
@@ -534,11 +535,11 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     *  ruleID : sô id rule của type đó
     *
     * */
-    fun addNewWord(wordFilter:String?,ruleID:Int?) {
+    fun addNewWord(wordFilter:String?,ruleID:Int?): Long {
         val db = this.writableDatabase
         val contentValues = ContentValues().apply {
             put(COLUMN_WORDS_NAME,wordFilter);
-            put(COLUMN_RULES_ID,ruleID);
+            put(COLUMN_RULESS_ID,ruleID);
         }
         return try {
             val result = db.insert(TABLE_WORDS_FILTER, null, contentValues)
@@ -554,8 +555,32 @@ class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME
     * Lấy các từ lọc theo từng rule
     * ruleID : sô id rule của type đó
     * */
-    fun getWordbyRule (ruleID:Int?) {
-        
+    fun getWordbyRule (ruleID:Int?): List<WordFilter> {
+        val wordList = mutableListOf<WordFilter>()
+        val selectQuery = "SELECT * FROM $TABLE_WORDS_FILTER WHERE $COLUMN_RULESS_ID = ?"
+        val db = this.readableDatabase
+        val cursor = db.rawQuery(selectQuery, arrayOf(ruleID.toString()))
+        Log.d("getWordbyRule", "getWordbyRule ${ruleID}")
+        if (cursor.moveToFirst()) {
+            do {
+                val id = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_WORDS_ID))
+                val wordsName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_WORDS_NAME))
+                val ruleId = cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_RULESS_ID))
+
+                // Tạo đối tượng Message với timestamp là chuỗi
+                val wordFilter = WordFilter(
+                    id = id,
+                    wordsName = wordsName,
+                    ruleID = ruleId
+                )
+
+                wordList.add(wordFilter)
+            } while (cursor.moveToNext())
+        }
+
+        cursor.close()
+        db.close()
+        return wordList
     }
     /* Xóa các từ khóa
     *  wordID: id của wordID
@@ -865,4 +890,9 @@ data class Version(
     val id: Int,
     val version: String,
     val releaseNotes: String,
+)
+data class WordFilter(
+    val id: Int,
+    val wordsName: String,
+    val ruleID: Int,
 )

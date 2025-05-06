@@ -1,6 +1,7 @@
 import 'package:bank_feed_vs1/model/bankList.dart';
 import 'package:flutter/material.dart';
 import '../model/ruleModel.dart';
+import '../model/wordFilterModal.dart';
 import '../service/getDataSevice.dart';
 import 'SelectionBankScreen.dart';
 import '../service/connectBe.dart';
@@ -21,7 +22,7 @@ class _UpdateruleState extends State<Updaterule> {
   late String _selectedBankShortName = '';
   late String _selectedBankName = '';
   late String url_logo_Bank = "";
-
+  List<Wordfiltermodal> wordFilterList = [];
   @override
   void initState() {
     super.initState();
@@ -37,11 +38,14 @@ class _UpdateruleState extends State<Updaterule> {
   Future<void> initPlatformState() async {
     BankModel? selectedBank =
         await ConnectToBe.getBankModelWithShortName(widget.rule.rulesName);
-
+    List<Wordfiltermodal> fetchedWordFilterList =
+        await NativeDataChannel.getWordFilter(widget.rule.id);
+    print("wordFilterList ${fetchedWordFilterList.length}");
     try {
       //check selectedBank null or not and check widget created or not
       if (mounted && selectedBank != null) {
         setState(() {
+          wordFilterList = fetchedWordFilterList;
           _selectedBankShortName = selectedBank.shortName;
           _selectedBankName = selectedBank.bankName;
           url_logo_Bank = selectedBank.logo;
@@ -224,7 +228,153 @@ class _UpdateruleState extends State<Updaterule> {
                       ]),
                     ),
                     SizedBox(height: 20),
-
+                    // Nút thêm ô nhập liệu
+                    Center(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white, // Màu nền trắng
+                          foregroundColor: Colors.red, // Màu chữ đỏ
+                          side: BorderSide(
+                              color: Colors.red, width: 1.5), // Viền đỏ
+                        ),
+                        onPressed: () {
+                          // Hiển thị popup khi nhấn nút
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              TextEditingController inputController =
+                                  TextEditingController();
+                              return AlertDialog(
+                                title: Text(
+                                  "Thêm từ loại trừ",
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                                content: SizedBox(
+                                  width: MediaQuery.of(context).size.width *
+                                      10.0, // Đặt chiều rộng 80% màn hình
+                                  child: TextField(
+                                    controller: inputController,
+                                    decoration: InputDecoration(
+                                      labelText: "Nhập từ loại trừ",
+                                      border: OutlineInputBorder(),
+                                    ),
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () async {
+                                      // bool deleteWordStatus =
+                                      //     await NativeDataChannel
+                                      //         .deleteWordFilter(
+                                      //             widget.rule.id, context);
+                                      // if (deleteWordStatus) {
+                                      //   await initPlatformState();
+                                      // }
+                                      Navigator.of(context).pop(); // Đóng popup
+                                    },
+                                    child: Text(
+                                      "Hủy",
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          Colors.red, // Màu nền nút submit
+                                      foregroundColor:
+                                          Colors.white, // Màu chữ trắng
+                                    ),
+                                    onPressed: () async {
+                                      String inputData = inputController.text;
+                                      if (inputData.isNotEmpty) {
+                                        bool isAdded = await NativeDataChannel
+                                            .addWordFilter(inputData,
+                                                widget.rule.id, context);
+                                        if (isAdded) {
+                                          // Gọi lại hàm load dữ liệu
+                                          await initPlatformState();
+                                        }
+                                      } else {
+                                        // Hiển thị thông báo nếu không nhập dữ liệu
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(SnackBar(
+                                          content:
+                                              Text("Vui lòng nhập từ loại trừ"),
+                                          duration: Duration(seconds: 2),
+                                          backgroundColor: Color(0xFFc93131),
+                                        ));
+                                      }
+                                      Navigator.of(context).pop(); // Đóng popup
+                                    },
+                                    child: Text("Submit"),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: Text("Thêm từ loại trừ"),
+                      ),
+                    ),
+                    SizedBox(height: 20),
+                    wordFilterList.isNotEmpty
+                        ? Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(
+                                  right: 10.0), // Thêm khoảng cách bên phải
+                              child: Scrollbar(
+                                thumbVisibility:
+                                    true, // Hiển thị thanh cuộn luôn luôn
+                                child: ListView.builder(
+                                  itemCount: wordFilterList.length,
+                                  itemBuilder: (context, index) {
+                                    final word = wordFilterList[index];
+                                    return Card(
+                                      color: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(5), // Bo góc
+                                        side: BorderSide(
+                                          color: Colors.grey, // Màu viền
+                                          width: 1.5, // Độ dày viền
+                                        ),
+                                      ),
+                                      child: ListTile(
+                                        title: Text(
+                                          word.wordsName,
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                        trailing: IconButton(
+                                          icon: Icon(Icons.close,
+                                              color: Colors.red),
+                                          onPressed: () async {
+                                            // Xóa từ khỏi danh sách
+                                            bool isDeleted =
+                                                await NativeDataChannel
+                                                    .deleteWordFilter(
+                                                        word.id, context);
+                                            if (isDeleted) {
+                                              setState(() {
+                                                wordFilterList.removeAt(index);
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          )
+                        : Center(
+                            child: Text(
+                              "Danh sách từ loại trừ trống",
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                          ),
+                    SizedBox(height: 20),
                     // Nút để thực hiện hành động khi đã nhập xong
                     Center(
                       child: ElevatedButton(
