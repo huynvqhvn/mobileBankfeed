@@ -81,7 +81,7 @@ class _SelectionBankScreen extends State<SelectionBankScreen> {
     if (listBankSearch.length > 0) {
       setState(() {
         listBanks =
-            listBankSearch; // Đặt trạng thái là true khi đã hoàn thành việc lấy dữ liệu
+            listBankSearch;
       });
     } else {
       setState(() {

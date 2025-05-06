@@ -101,38 +101,48 @@ class _UpdateruleState extends State<Updaterule> {
                     ),
                     SizedBox(height: 10),
                     // Dropdown chọn giữa "sms" và "app"
-                    Row(children: [
-                      Expanded(
+                    Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.center, // Căn giữa theo chiều ngang
+                      children: [
+                        Expanded(
                           child: Card(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(5), // Bo góc
-                          side: BorderSide(
-                            color: Colors.grey, // Màu viền
-                            width: 1.5, // Độ dày viền
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(5), // Bo góc
+                              side: BorderSide(
+                                color: Colors.grey, // Màu viền
+                                width: 1.5, // Độ dày viền
+                              ),
+                            ),
+                            color: Colors.white,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal:
+                                      12.0), // Thêm khoảng cách bên trong
+                              child: DropdownButtonFormField<String>(
+                                value: _selectedOptionType,
+                                isExpanded: true,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                ),
+                                items: <String>['sms', 'app']
+                                    .map((String value) =>
+                                        DropdownMenuItem<String>(
+                                          value: value,
+                                          child: Text(value),
+                                        ))
+                                    .toList(),
+                                onChanged: (newValue) {
+                                  setState(() {
+                                    _selectedOptionType = newValue!;
+                                  });
+                                },
+                              ),
+                            ),
                           ),
                         ),
-                        color: Colors.white,
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedOptionType,
-                          decoration: InputDecoration(
-                            contentPadding:
-                                EdgeInsets.symmetric(horizontal: 12),
-                            border: InputBorder.none,
-                          ),
-                          items: <String>['sms', 'app']
-                              .map((String value) => DropdownMenuItem<String>(
-                                    value: value,
-                                    child: Text(value),
-                                  ))
-                              .toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              _selectedOptionType = newValue!;
-                            });
-                          },
-                        ),
-                      ))
-                    ]),
+                      ],
+                    ),
                     SizedBox(height: 20),
 
                     Text(
